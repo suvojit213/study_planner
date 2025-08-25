@@ -14,7 +14,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
   @override
   void initState() {
     super.initState();
-    FlutterRingtonePlayer.playAlarm(looping: true);
+    FlutterRingtonePlayer().playAlarm();
   }
 
   @override
