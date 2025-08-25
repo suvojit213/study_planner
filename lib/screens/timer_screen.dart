@@ -109,9 +109,17 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
   }
 
   Future<void> _showCompletionDialog() async {
+    final subject = _subjectService.selectedSubject;
+    if (subject == null) return;
+
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => AlarmScreen()),
+      MaterialPageRoute(
+        builder: (context) => AlarmScreen(
+          subject: subject,
+          duration: _timerService.elapsedTime,
+        ),
+      ),
     );
   }
 
