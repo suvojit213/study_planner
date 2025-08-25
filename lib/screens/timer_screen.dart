@@ -32,21 +32,33 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
     ));
     
     _timerService.addListener(_onTimerUpdate);
+    _timerService.isTargetCompleted.addListener(_onTargetCompleted);
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
     _timerService.removeListener(_onTimerUpdate);
+    _timerService.isTargetCompleted.removeListener(_onTargetCompleted);
     super.dispose();
   }
 
   void _onTimerUpdate() {
-    if (_timerService.state == TimerState.running) {
-      _pulseController.repeat(reverse: true);
-    } else {
-      _pulseController.stop();
-      _pulseController.reset();
+    if (mounted) {
+      setState(() {
+        if (_timerService.state == TimerState.running) {
+          _pulseController.repeat(reverse: true);
+        } else {
+          _pulseController.stop();
+          _pulseController.reset();
+        }
+      });
+    }
+  }
+
+  void _onTargetCompleted() {
+    if (_timerService.isTargetCompleted.value) {
+      _showCompletionDialog();
     }
   }
 
@@ -75,7 +87,7 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
     final shouldEnd = await _showEndConfirmationDialog();
     if (shouldEnd) {
       await _timerService.endStudy();
-      _showSnackBar('Study session completed!', Colors.green);
+      _showSnackBar('Study session ended.', Colors.blue);
     }
   }
 
@@ -92,6 +104,34 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showCompletionDialog() async {
+    final subjectName = _subjectService.selectedSubject?.name ?? 'the subject';
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Target Completed!'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Congratulations! You have completed your study target for $subjectName.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Awesome!'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 

@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../models/subject.dart';
 import '../models/study_session.dart';
 import '../database/database_helper.dart';
+import '../main.dart';
 
 enum TimerState { stopped, running, paused }
 
@@ -17,6 +20,8 @@ class TimerService extends ChangeNotifier {
   Subject? _currentSubject;
   StudySession? _currentSession;
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  final ValueNotifier<bool> isTargetCompleted = ValueNotifier(false);
 
   // Getters
   TimerState get state => _state;
@@ -42,6 +47,7 @@ class TimerService extends ChangeNotifier {
       return false;
     }
 
+    isTargetCompleted.value = false;
     _currentSubject = subject;
     _elapsedSeconds = 0;
     _state = TimerState.running;
@@ -82,7 +88,7 @@ class TimerService extends ChangeNotifier {
   }
 
   // End study session
-  Future<void> endStudy() async {
+  Future<void> endStudy({bool isCompleted = false}) async {
     if (_state == TimerState.stopped) return;
 
     _timer?.cancel();
@@ -93,10 +99,16 @@ class TimerService extends ChangeNotifier {
       final updatedSession = _currentSession!.copyWith(
         endTime: DateTime.now(),
         durationMinutes: _elapsedSeconds ~/ 60,
-        isCompleted: true,
+        isCompleted: isCompleted,
       );
 
       await _dbHelper.updateStudySession(updatedSession);
+    }
+
+    if (isCompleted && _currentSubject != null) {
+      isTargetCompleted.value = true;
+      _playAlarm();
+      _showCompletionNotification(_currentSubject!.name);
     }
 
     _currentSubject = null;
@@ -110,6 +122,12 @@ class TimerService extends ChangeNotifier {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _elapsedSeconds++;
       notifyListeners();
+
+      if (_currentSubject != null &&
+          _currentSubject!.dailyTarget.inSeconds > 0 &&
+          _elapsedSeconds >= _currentSubject!.dailyTarget.inSeconds) {
+        endStudy(isCompleted: true);
+      }
 
       // Auto-save session every minute
       if (_elapsedSeconds % 60 == 0 && _currentSession != null) {
@@ -127,6 +145,31 @@ class TimerService extends ChangeNotifier {
     );
 
     await _dbHelper.updateStudySession(updatedSession);
+  }
+
+  Future<void> _playAlarm() async {
+    // TODO: Add your alarm sound file in assets and update the path
+    // await _audioPlayer.play(AssetSource('audio/alarm.mp3'));
+  }
+
+  Future<void> _showCompletionNotification(String subjectName) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'study_target_completion_channel',
+      'Study Target Completion',
+      channelDescription: 'Notifies when a study target is completed',
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: false,
+    );
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Target Completed!',
+      'Congratulations! You have completed your study target for $subjectName.',
+      platformChannelSpecifics,
+    );
   }
 
   // Get today's total study time
