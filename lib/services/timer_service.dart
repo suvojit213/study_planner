@@ -132,7 +132,7 @@ class TimerService extends ChangeNotifier {
   // Get today's total study time
   Future<int> getTodayTotalMinutes() async {
     final todayTime = await _dbHelper.getTodayStudyTime();
-    return todayTime.values.fold(0, (sum, minutes) => sum + minutes);
+    return todayTime.values.fold<int>(0, (int sum, int minutes) => sum + minutes);
   }
 
   // Get subject progress for today
