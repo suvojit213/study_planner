@@ -110,7 +110,7 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
   Future<void> _showCompletionDialog() async {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AlarmScreen()),
+      MaterialPageRoute(builder: (context) => AlarmScreen()),
     );
   }
 
