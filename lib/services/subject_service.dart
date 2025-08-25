@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/subject.dart';
+import '../models/study_session.dart';
 import '../database/database_helper.dart';
 
 class SubjectService extends ChangeNotifier {
