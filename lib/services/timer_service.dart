@@ -159,7 +159,7 @@ class TimerService extends ChangeNotifier {
       channelDescription: 'Notifies when a study target is completed',
       importance: Importance.max,
       priority: Priority.high,
-      showWhen: false,
+      fullScreenIntent: true,
       sound: alarmSound != null ? UriAndroidNotificationSound(alarmSound) : null,
     );
     final NotificationDetails platformChannelSpecifics =
