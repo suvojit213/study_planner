@@ -75,26 +75,18 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
   }
 
   Widget _buildStatsOverview(int totalTime, double avgDuration) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatCard('Total Time', '${totalTime}m', Icons.access_time, Colors.green),
-          _buildStatCard('Avg Session', '${avgDuration.toStringAsFixed(1)}m', Icons.timelapse, Colors.orange),
-        ],
-      ),
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      children: [
+        _buildStatCard('Total Time', '${totalTime}m', Icons.access_time, Colors.green),
+        _buildStatCard('Avg Session', '${avgDuration.toStringAsFixed(1)}m', Icons.timelapse, Colors.orange),
+        _buildStatCard('Daily Target', '${widget.subject.dailyTargetMinutes ?? '-'}m', Icons.today, Colors.blue),
+        _buildStatCard('Monthly Target', '${widget.subject.monthlyTargetMinutes ?? '-'}m', Icons.calendar_today, Colors.purple),
+      ],
     );
   }
 

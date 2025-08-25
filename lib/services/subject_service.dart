@@ -32,6 +32,8 @@ class SubjectService extends ChangeNotifier {
     required String name,
     String? description,
     required int targetMinutes,
+    int? dailyTargetMinutes,
+    int? monthlyTargetMinutes,
   }) async {
     try {
       // Check if subject with same name already exists
@@ -43,6 +45,8 @@ class SubjectService extends ChangeNotifier {
         name: name,
         description: description,
         targetMinutes: targetMinutes,
+        dailyTargetMinutes: dailyTargetMinutes,
+        monthlyTargetMinutes: monthlyTargetMinutes,
         createdAt: DateTime.now(),
       );
 

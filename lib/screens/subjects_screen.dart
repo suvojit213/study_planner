@@ -48,6 +48,8 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     final nameController = TextEditingController();
     final descriptionController = TextEditingController();
     final targetController = TextEditingController();
+    final dailyTargetController = TextEditingController();
+    final monthlyTargetController = TextEditingController();
 
     showDialog(
       context: context,
@@ -83,6 +85,26 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 ),
                 keyboardType: TextInputType.number,
               ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: dailyTargetController,
+                decoration: const InputDecoration(
+                  labelText: 'Daily Target (Optional)',
+                  border: OutlineInputBorder(),
+                  suffixText: 'minutes',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: monthlyTargetController,
+                decoration: const InputDecoration(
+                  labelText: 'Monthly Target (Optional)',
+                  border: OutlineInputBorder(),
+                  suffixText: 'minutes',
+                ),
+                keyboardType: TextInputType.number,
+              ),
             ],
           ),
         ),
@@ -105,12 +127,17 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 return;
               }
 
+              final dailyTarget = int.tryParse(dailyTargetController.text);
+              final monthlyTarget = int.tryParse(monthlyTargetController.text);
+
               final success = await _subjectService.addSubject(
                 name: nameController.text.trim(),
                 description: descriptionController.text.trim().isEmpty 
                     ? null 
                     : descriptionController.text.trim(),
                 targetMinutes: targetMinutes,
+                dailyTargetMinutes: dailyTarget,
+                monthlyTargetMinutes: monthlyTarget,
               );
 
               if (success) {
@@ -131,6 +158,8 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     final nameController = TextEditingController(text: subject.name);
     final descriptionController = TextEditingController(text: subject.description ?? '');
     final targetController = TextEditingController(text: subject.targetMinutes.toString());
+    final dailyTargetController = TextEditingController(text: subject.dailyTargetMinutes?.toString() ?? '');
+    final monthlyTargetController = TextEditingController(text: subject.monthlyTargetMinutes?.toString() ?? '');
 
     showDialog(
       context: context,
@@ -166,6 +195,26 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 ),
                 keyboardType: TextInputType.number,
               ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: dailyTargetController,
+                decoration: const InputDecoration(
+                  labelText: 'Daily Target (Optional)',
+                  border: OutlineInputBorder(),
+                  suffixText: 'minutes',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: monthlyTargetController,
+                decoration: const InputDecoration(
+                  labelText: 'Monthly Target (Optional)',
+                  border: OutlineInputBorder(),
+                  suffixText: 'minutes',
+                ),
+                keyboardType: TextInputType.number,
+              ),
             ],
           ),
         ),
@@ -188,12 +237,17 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 return;
               }
 
+              final dailyTarget = int.tryParse(dailyTargetController.text);
+              final monthlyTarget = int.tryParse(monthlyTargetController.text);
+
               final updatedSubject = subject.copyWith(
                 name: nameController.text.trim(),
                 description: descriptionController.text.trim().isEmpty 
                     ? null 
                     : descriptionController.text.trim(),
                 targetMinutes: targetMinutes,
+                dailyTargetMinutes: dailyTarget,
+                monthlyTargetMinutes: monthlyTarget,
               );
 
               final success = await _subjectService.updateSubject(updatedSubject);

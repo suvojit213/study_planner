@@ -3,6 +3,8 @@ class Subject {
   final String name;
   final String? description;
   final int targetMinutes;
+  final int? dailyTargetMinutes;
+  final int? monthlyTargetMinutes;
   final DateTime createdAt;
 
   Subject({
@@ -10,6 +12,8 @@ class Subject {
     required this.name,
     this.description,
     required this.targetMinutes,
+    this.dailyTargetMinutes,
+    this.monthlyTargetMinutes,
     required this.createdAt,
   });
 
@@ -19,6 +23,8 @@ class Subject {
       'name': name,
       'description': description,
       'target_minutes': targetMinutes,
+      'daily_target_minutes': dailyTargetMinutes,
+      'monthly_target_minutes': monthlyTargetMinutes,
       'created_at': createdAt.millisecondsSinceEpoch,
     };
   }
@@ -29,6 +35,8 @@ class Subject {
       name: map['name'],
       description: map['description'],
       targetMinutes: map['target_minutes'],
+      dailyTargetMinutes: map['daily_target_minutes'],
+      monthlyTargetMinutes: map['monthly_target_minutes'],
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
     );
   }
@@ -38,6 +46,8 @@ class Subject {
     String? name,
     String? description,
     int? targetMinutes,
+    int? dailyTargetMinutes,
+    int? monthlyTargetMinutes,
     DateTime? createdAt,
   }) {
     return Subject(
@@ -45,6 +55,8 @@ class Subject {
       name: name ?? this.name,
       description: description ?? this.description,
       targetMinutes: targetMinutes ?? this.targetMinutes,
+      dailyTargetMinutes: dailyTargetMinutes ?? this.dailyTargetMinutes,
+      monthlyTargetMinutes: monthlyTargetMinutes ?? this.monthlyTargetMinutes,
       createdAt: createdAt ?? this.createdAt,
     );
   }

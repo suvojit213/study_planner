@@ -20,9 +20,17 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'study_planner.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE subjects ADD COLUMN daily_target_minutes INTEGER');
+      await db.execute('ALTER TABLE subjects ADD COLUMN monthly_target_minutes INTEGER');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -32,6 +40,8 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         description TEXT,
         target_minutes INTEGER NOT NULL,
+        daily_target_minutes INTEGER,
+        monthly_target_minutes INTEGER,
         created_at INTEGER NOT NULL
       )
     ''');
