@@ -31,9 +31,7 @@ class SubjectService extends ChangeNotifier {
   Future<bool> addSubject({
     required String name,
     String? description,
-    required int targetMinutes,
-    int? dailyTargetMinutes,
-    int? monthlyTargetMinutes,
+    Duration? dailyTarget,
   }) async {
     try {
       // Check if subject with same name already exists
@@ -44,9 +42,7 @@ class SubjectService extends ChangeNotifier {
       final subject = Subject(
         name: name,
         description: description,
-        targetMinutes: targetMinutes,
-        dailyTargetMinutes: dailyTargetMinutes,
-        monthlyTargetMinutes: monthlyTargetMinutes,
+        dailyTarget: dailyTarget,
         createdAt: DateTime.now(),
       );
 

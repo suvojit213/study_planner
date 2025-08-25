@@ -2,18 +2,14 @@ class Subject {
   final int? id;
   final String name;
   final String? description;
-  final int targetMinutes;
-  final int? dailyTargetMinutes;
-  final int? monthlyTargetMinutes;
+  final Duration? dailyTarget;
   final DateTime createdAt;
 
   Subject({
     this.id,
     required this.name,
     this.description,
-    required this.targetMinutes,
-    this.dailyTargetMinutes,
-    this.monthlyTargetMinutes,
+    this.dailyTarget,
     required this.createdAt,
   });
 
@@ -22,9 +18,7 @@ class Subject {
       'id': id,
       'name': name,
       'description': description,
-      'target_minutes': targetMinutes,
-      'daily_target_minutes': dailyTargetMinutes,
-      'monthly_target_minutes': monthlyTargetMinutes,
+      'daily_target_minutes': dailyTarget?.inMinutes,
       'created_at': createdAt.millisecondsSinceEpoch,
     };
   }
@@ -34,9 +28,9 @@ class Subject {
       id: map['id'],
       name: map['name'],
       description: map['description'],
-      targetMinutes: map['target_minutes'],
-      dailyTargetMinutes: map['daily_target_minutes'],
-      monthlyTargetMinutes: map['monthly_target_minutes'],
+      dailyTarget: map['daily_target_minutes'] != null
+          ? Duration(minutes: map['daily_target_minutes'])
+          : null,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
     );
   }
@@ -45,18 +39,14 @@ class Subject {
     int? id,
     String? name,
     String? description,
-    int? targetMinutes,
-    int? dailyTargetMinutes,
-    int? monthlyTargetMinutes,
+    Duration? dailyTarget,
     DateTime? createdAt,
   }) {
     return Subject(
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
-      targetMinutes: targetMinutes ?? this.targetMinutes,
-      dailyTargetMinutes: dailyTargetMinutes ?? this.dailyTargetMinutes,
-      monthlyTargetMinutes: monthlyTargetMinutes ?? this.monthlyTargetMinutes,
+      dailyTarget: dailyTarget ?? this.dailyTarget,
       createdAt: createdAt ?? this.createdAt,
     );
   }

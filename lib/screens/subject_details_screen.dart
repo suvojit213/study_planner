@@ -84,10 +84,24 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
       children: [
         _buildStatCard('Total Time', '${totalTime}m', Icons.access_time, Colors.green),
         _buildStatCard('Avg Session', '${avgDuration.toStringAsFixed(1)}m', Icons.timelapse, Colors.orange),
-        _buildStatCard('Daily Target', '${widget.subject.dailyTargetMinutes ?? '-'}m', Icons.today, Colors.blue),
-        _buildStatCard('Monthly Target', '${widget.subject.monthlyTargetMinutes ?? '-'}m', Icons.calendar_today, Colors.purple),
+        _buildStatCard('Daily Target', _formatDuration(widget.subject.dailyTarget), Icons.today, Colors.blue),
       ],
     );
+  }
+
+  String _formatDuration(Duration? duration) {
+    if (duration == null || duration.inMinutes == 0) {
+      return '-';
+    }
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    if (hours > 0 && minutes > 0) {
+      return '${hours}h ${minutes}m';
+    } else if (hours > 0) {
+      return '${hours}h';
+    } else {
+      return '${minutes}m';
+    }
   }
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {

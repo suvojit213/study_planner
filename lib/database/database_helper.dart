@@ -20,7 +20,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'study_planner.db');
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -31,6 +31,23 @@ class DatabaseHelper {
       await db.execute('ALTER TABLE subjects ADD COLUMN daily_target_minutes INTEGER');
       await db.execute('ALTER TABLE subjects ADD COLUMN monthly_target_minutes INTEGER');
     }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE subjects_new(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          description TEXT,
+          daily_target_minutes INTEGER,
+          created_at INTEGER NOT NULL
+        )
+      ''');
+      await db.execute('''
+        INSERT INTO subjects_new (id, name, description, daily_target_minutes, created_at)
+        SELECT id, name, description, daily_target_minutes, created_at FROM subjects
+      ''');
+      await db.execute('DROP TABLE subjects');
+      await db.execute('ALTER TABLE subjects_new RENAME TO subjects');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -39,9 +56,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         description TEXT,
-        target_minutes INTEGER NOT NULL,
         daily_target_minutes INTEGER,
-        monthly_target_minutes INTEGER,
         created_at INTEGER NOT NULL
       )
     ''');

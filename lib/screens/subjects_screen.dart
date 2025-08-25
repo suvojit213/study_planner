@@ -47,9 +47,8 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
   void _showAddSubjectDialog() {
     final nameController = TextEditingController();
     final descriptionController = TextEditingController();
-    final targetController = TextEditingController();
-    final dailyTargetController = TextEditingController();
-    final monthlyTargetController = TextEditingController();
+    final hoursController = TextEditingController();
+    final minutesController = TextEditingController();
 
     showDialog(
       context: context,
@@ -76,34 +75,30 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: targetController,
-                decoration: const InputDecoration(
-                  labelText: 'Target Minutes *',
-                  border: OutlineInputBorder(),
-                  suffixText: 'minutes',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: dailyTargetController,
-                decoration: const InputDecoration(
-                  labelText: 'Daily Target (Optional)',
-                  border: OutlineInputBorder(),
-                  suffixText: 'minutes',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: monthlyTargetController,
-                decoration: const InputDecoration(
-                  labelText: 'Monthly Target (Optional)',
-                  border: OutlineInputBorder(),
-                  suffixText: 'minutes',
-                ),
-                keyboardType: TextInputType.number,
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: hoursController,
+                      decoration: const InputDecoration(
+                        labelText: 'Hours',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: minutesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Minutes',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -115,29 +110,21 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (nameController.text.trim().isEmpty || 
-                  targetController.text.trim().isEmpty) {
+              if (nameController.text.trim().isEmpty) {
                 _showSnackBar('Please fill in all required fields', Colors.red);
                 return;
               }
 
-              final targetMinutes = int.tryParse(targetController.text);
-              if (targetMinutes == null || targetMinutes <= 0) {
-                _showSnackBar('Please enter a valid target time', Colors.red);
-                return;
-              }
-
-              final dailyTarget = int.tryParse(dailyTargetController.text);
-              final monthlyTarget = int.tryParse(monthlyTargetController.text);
+              final hours = int.tryParse(hoursController.text) ?? 0;
+              final minutes = int.tryParse(minutesController.text) ?? 0;
+              final dailyTarget = Duration(hours: hours, minutes: minutes);
 
               final success = await _subjectService.addSubject(
                 name: nameController.text.trim(),
-                description: descriptionController.text.trim().isEmpty 
-                    ? null 
+                description: descriptionController.text.trim().isEmpty
+                    ? null
                     : descriptionController.text.trim(),
-                targetMinutes: targetMinutes,
-                dailyTargetMinutes: dailyTarget,
-                monthlyTargetMinutes: monthlyTarget,
+                dailyTarget: dailyTarget.inMinutes > 0 ? dailyTarget : null,
               );
 
               if (success) {
@@ -157,9 +144,8 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
   void _showEditSubjectDialog(Subject subject) {
     final nameController = TextEditingController(text: subject.name);
     final descriptionController = TextEditingController(text: subject.description ?? '');
-    final targetController = TextEditingController(text: subject.targetMinutes.toString());
-    final dailyTargetController = TextEditingController(text: subject.dailyTargetMinutes?.toString() ?? '');
-    final monthlyTargetController = TextEditingController(text: subject.monthlyTargetMinutes?.toString() ?? '');
+    final hoursController = TextEditingController(text: subject.dailyTarget?.inHours.toString() ?? '');
+    final minutesController = TextEditingController(text: (subject.dailyTarget?.inMinutes ?? 0) % 60).toString());
 
     showDialog(
       context: context,
@@ -186,34 +172,30 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: targetController,
-                decoration: const InputDecoration(
-                  labelText: 'Target Minutes *',
-                  border: OutlineInputBorder(),
-                  suffixText: 'minutes',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: dailyTargetController,
-                decoration: const InputDecoration(
-                  labelText: 'Daily Target (Optional)',
-                  border: OutlineInputBorder(),
-                  suffixText: 'minutes',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: monthlyTargetController,
-                decoration: const InputDecoration(
-                  labelText: 'Monthly Target (Optional)',
-                  border: OutlineInputBorder(),
-                  suffixText: 'minutes',
-                ),
-                keyboardType: TextInputType.number,
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: hoursController,
+                      decoration: const InputDecoration(
+                        labelText: 'Hours',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: minutesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Minutes',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -225,29 +207,21 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (nameController.text.trim().isEmpty || 
-                  targetController.text.trim().isEmpty) {
+              if (nameController.text.trim().isEmpty) {
                 _showSnackBar('Please fill in all required fields', Colors.red);
                 return;
               }
 
-              final targetMinutes = int.tryParse(targetController.text);
-              if (targetMinutes == null || targetMinutes <= 0) {
-                _showSnackBar('Please enter a valid target time', Colors.red);
-                return;
-              }
-
-              final dailyTarget = int.tryParse(dailyTargetController.text);
-              final monthlyTarget = int.tryParse(monthlyTargetController.text);
+              final hours = int.tryParse(hoursController.text) ?? 0;
+              final minutes = int.tryParse(minutesController.text) ?? 0;
+              final dailyTarget = Duration(hours: hours, minutes: minutes);
 
               final updatedSubject = subject.copyWith(
                 name: nameController.text.trim(),
-                description: descriptionController.text.trim().isEmpty 
-                    ? null 
+                description: descriptionController.text.trim().isEmpty
+                    ? null
                     : descriptionController.text.trim(),
-                targetMinutes: targetMinutes,
-                dailyTargetMinutes: dailyTarget,
-                monthlyTargetMinutes: monthlyTarget,
+                dailyTarget: dailyTarget.inMinutes > 0 ? dailyTarget : null,
               );
 
               final success = await _subjectService.updateSubject(updatedSubject);
