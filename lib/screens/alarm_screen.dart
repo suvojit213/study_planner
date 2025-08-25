@@ -28,7 +28,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                FlutterRingtonePlayer.stop();
+                FlutterRingtonePlayer().stop();
                 Navigator.pop(context);
               },
               child: const Text('Stop'),
