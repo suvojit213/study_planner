@@ -1,0 +1,38 @@
+# IDE and environment files
+.idea/
+.vscode/
+*.iml
+*.iws
+.DS_Store
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+.env
+
+# Build and distribution artifacts
+build/
+dist/
+*.egg-info/
+
+# Test and coverage reports
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Secrets and sensitive data
+*.env
+secrets.yml
+config.json
+
+# Log files
+*.log
