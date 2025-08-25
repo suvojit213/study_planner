@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../models/subject.dart';
 import '../models/study_session.dart';
 import '../database/database_helper.dart';
 import '../main.dart';
+import 'settings_service.dart';
 
 enum TimerState { stopped, running, paused }
 
@@ -20,7 +20,7 @@ class TimerService extends ChangeNotifier {
   Subject? _currentSubject;
   StudySession? _currentSession;
   final DatabaseHelper _dbHelper = DatabaseHelper();
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final SettingsService _settingsService = SettingsService();
   final ValueNotifier<bool> isTargetCompleted = ValueNotifier(false);
 
   // Getters
@@ -107,7 +107,6 @@ class TimerService extends ChangeNotifier {
 
     if (isCompleted && _currentSubject != null) {
       isTargetCompleted.value = true;
-      _playAlarm();
       _showCompletionNotification(_currentSubject!.name);
     }
 
@@ -147,13 +146,11 @@ class TimerService extends ChangeNotifier {
     await _dbHelper.updateStudySession(updatedSession);
   }
 
-  Future<void> _playAlarm() async {
-    // TODO: Add your alarm sound file in assets and update the path
-    // await _audioPlayer.play(AssetSource('audio/alarm.mp3'));
-  }
-
   Future<void> _showCompletionNotification(String subjectName) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+    final alarmSound = await _settingsService.getAlarmSound();
+    final sound = alarmSound != null ? Uri.parse(alarmSound) : null;
+
+    final AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'study_target_completion_channel',
       'Study Target Completion',
@@ -161,8 +158,9 @@ class TimerService extends ChangeNotifier {
       importance: Importance.max,
       priority: Priority.high,
       showWhen: false,
+      sound: sound != null ? RawResourceAndroidNotificationSound(sound.path) : null,
     );
-    const NotificationDetails platformChannelSpecifics =
+    final NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.show(
       0,

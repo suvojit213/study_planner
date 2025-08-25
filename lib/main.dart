@@ -4,6 +4,7 @@ import 'services/subject_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/timer_screen.dart';
 import 'screens/subjects_screen.dart';
+import 'screens/settings_screen.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -54,6 +55,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const TimerScreen(),
     const SubjectsScreen(),
+    const SettingsScreen(),
   ];
 
   @override
@@ -104,6 +106,11 @@ class _MainScreenState extends State<MainScreen> {
                   icon: Icons.book,
                   label: 'Subjects',
                   index: 2,
+                ),
+                _buildNavItem(
+                  icon: Icons.settings,
+                  label: 'Settings',
+                  index: 3,
                 ),
               ],
             ),
