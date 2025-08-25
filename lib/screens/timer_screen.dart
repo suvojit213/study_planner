@@ -108,30 +108,9 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
   }
 
   Future<void> _showCompletionDialog() async {
-    final subjectName = _subjectService.selectedSubject?.name ?? 'the subject';
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Target Completed!'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('Congratulations! You have completed your study target for $subjectName.'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Awesome!'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AlarmScreen()),
     );
   }
 
