@@ -148,6 +148,14 @@ class SubjectService extends ChangeNotifier {
     return todayTime[subjectName] ?? 0;
   }
 
+  Future<List<StudySession>> getStudySessionsForSubject(int subjectId) async {
+    return await _dbHelper.getStudySessionsForSubject(subjectId);
+  }
+
+  Future<double> getAverageSessionDuration(int subjectId) async {
+    return await _dbHelper.getAverageSessionDuration(subjectId);
+  }
+
   // Search subjects by name
   List<Subject> searchSubjects(String query) {
     if (query.isEmpty) return _subjects;

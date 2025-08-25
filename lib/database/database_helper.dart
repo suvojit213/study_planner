@@ -140,6 +140,28 @@ class DatabaseHelper {
     );
   }
 
+  Future<List<StudySession>> getStudySessionsForSubject(int subjectId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'study_sessions',
+      where: 'subject_id = ? AND is_completed = 1',
+      whereArgs: [subjectId],
+      orderBy: 'start_time DESC',
+    );
+    return List.generate(maps.length, (i) {
+      return StudySession.fromMap(maps[i]);
+    });
+  }
+
+  Future<double> getAverageSessionDuration(int subjectId) async {
+    final db = await database;
+    final result = await db.rawQuery(
+      'SELECT AVG(duration_minutes) as avg FROM study_sessions WHERE subject_id = ? AND is_completed = 1',
+      [subjectId],
+    );
+    return (result.first['avg'] as num?)?.toDouble() ?? 0.0;
+  }
+
   // Analytics
   Future<int> getTotalStudyTimeForSubject(int subjectId) async {
     final db = await database;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/subject_service.dart';
 import '../models/subject.dart';
+import './subject_details_screen.dart';
 
 class SubjectsScreen extends StatefulWidget {
   const SubjectsScreen({super.key});
@@ -384,91 +385,101 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: CircleAvatar(
-          backgroundColor: Colors.blue[100],
-          child: Icon(
-            Icons.book,
-            color: Colors.blue[600],
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SubjectDetailsScreen(subject: subject),
+            ),
+          );
+        },
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(16),
+          leading: CircleAvatar(
+            backgroundColor: Colors.blue[100],
+            child: Icon(
+              Icons.book,
+              color: Colors.blue[600],
+            ),
           ),
-        ),
-        title: Text(
-          subject.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
+          title: Text(
+            subject.name,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
           ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (subject.description != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                subject.description!,
-                style: TextStyle(color: Colors.grey[600]),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (subject.description != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  subject.description!,
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    Icons.flag,
+                    size: 16,
+                    color: Colors.green[600],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Target: ${subject.targetMinutes}m',
+                    style: TextStyle(
+                      color: Colors.green[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ],
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  Icons.flag,
-                  size: 16,
-                  color: Colors.green[600],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Target: ${subject.targetMinutes}m',
-                  style: TextStyle(
-                    color: Colors.green[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListenableBuilder(
-              listenable: _subjectService,
-              builder: (context, child) {
-                final isSelected = _subjectService.selectedSubject?.id == subject.id;
-                return IconButton(
-                  onPressed: () {
-                    if (isSelected) {
-                      _subjectService.clearSelection();
-                    } else {
-                      _subjectService.selectSubject(subject);
-                    }
-                  },
-                  icon: Icon(
-                    isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                    color: isSelected ? Colors.blue[600] : Colors.grey[400],
-                  ),
-                );
-              },
-            ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'edit':
-                    _showEditSubjectDialog(subject);
-                    break;
-                  case 'delete':
-                    _showDeleteConfirmation(subject);
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                const PopupMenuItem(value: 'delete', child: Text('Delete')),
-              ],
-            ),
-          ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListenableBuilder(
+                listenable: _subjectService,
+                builder: (context, child) {
+                  final isSelected = _subjectService.selectedSubject?.id == subject.id;
+                  return IconButton(
+                    onPressed: () {
+                      if (isSelected) {
+                        _subjectService.clearSelection();
+                      } else {
+                        _subjectService.selectSubject(subject);
+                      }
+                    },
+                    icon: Icon(
+                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                      color: isSelected ? Colors.blue[600] : Colors.grey[400],
+                    ),
+                  );
+                },
+              ),
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'edit':
+                      _showEditSubjectDialog(subject);
+                      break;
+                    case 'delete':
+                      _showDeleteConfirmation(subject);
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
