@@ -148,8 +148,9 @@ class TimerService extends ChangeNotifier {
   }
 
   Future<void> _showCompletionNotification(String subjectName) async {
-    final alarmSound = await _settingsService.getAlarmSound();
-    final sound = alarmSound != null ? Uri.parse(alarmSound) : null;
+    final customAlarmSound = await _settingsService.getAlarmSound();
+    final defaultAlarmSound = await _settingsService.getDefaultAlarmSound();
+    final alarmSound = customAlarmSound ?? defaultAlarmSound;
 
     final AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
@@ -159,7 +160,7 @@ class TimerService extends ChangeNotifier {
       importance: Importance.max,
       priority: Priority.high,
       showWhen: false,
-      sound: sound != null ? RawResourceAndroidNotificationSound(sound.path) : null,
+      sound: alarmSound != null ? UriAndroidNotificationSound(alarmSound) : null,
     );
     final NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
