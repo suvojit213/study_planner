@@ -123,8 +123,9 @@ class TimerService extends ChangeNotifier {
       notifyListeners();
 
       if (_currentSubject != null &&
-          _currentSubject!.dailyTarget.inSeconds > 0 &&
-          _elapsedSeconds >= _currentSubject!.dailyTarget.inSeconds) {
+          _currentSubject!.dailyTarget != null &&
+          _currentSubject!.dailyTarget!.inSeconds > 0 &&
+          _elapsedSeconds >= _currentSubject!.dailyTarget!.inSeconds) {
         endStudy(isCompleted: true);
       }
 
