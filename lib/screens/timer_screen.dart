@@ -332,7 +332,7 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Target: ${selectedSubject.targetMinutes}m',
+                      'Target: ${_formatDuration(selectedSubject.dailyTarget)}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.green[600],
@@ -363,6 +363,21 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
         );
       },
     );
+  }
+
+  String _formatDuration(Duration? duration) {
+    if (duration == null || duration.inMinutes == 0) {
+      return '-';
+    }
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    if (hours > 0 && minutes > 0) {
+      return '${hours}h ${minutes}m';
+    } else if (hours > 0) {
+      return '${hours}h';
+    } else {
+      return '${minutes}m';
+    }
   }
 
   Widget _buildControlButtons() {

@@ -145,7 +145,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     final nameController = TextEditingController(text: subject.name);
     final descriptionController = TextEditingController(text: subject.description ?? '');
     final hoursController = TextEditingController(text: subject.dailyTarget?.inHours.toString() ?? '');
-    final minutesController = TextEditingController(text: (subject.dailyTarget?.inMinutes ?? 0) % 60).toString());
+    final minutesController = TextEditingController(text: ((subject.dailyTarget?.inMinutes ?? 0) % 60).toString());
 
     showDialog(
       context: context,
@@ -277,6 +277,21 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  String _formatDuration(Duration? duration) {
+    if (duration == null || duration.inMinutes == 0) {
+      return '-';
+    }
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    if (hours > 0 && minutes > 0) {
+      return '${hours}h ${minutes}m';
+    } else if (hours > 0) {
+      return '${hours}h';
+    } else {
+      return '${minutes}m';
+    }
   }
 
   @override
@@ -458,7 +473,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'Target: ${subject.targetMinutes}m',
+                    'Target: ${_formatDuration(subject.dailyTarget)}',
                     style: TextStyle(
                       color: Colors.green[600],
                       fontWeight: FontWeight.w500,

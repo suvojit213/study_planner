@@ -131,15 +131,16 @@ class SubjectService extends ChangeNotifier {
   // Get subject progress (studied vs target)
   Future<Map<String, dynamic>> getSubjectProgress(Subject subject) async {
     final totalMinutes = await getSubjectTotalTime(subject.id!);
-    final progressPercentage = subject.targetMinutes > 0 
-        ? (totalMinutes / subject.targetMinutes * 100).clamp(0, 100)
+    final targetMinutes = subject.dailyTarget?.inMinutes ?? 0;
+    final progressPercentage = targetMinutes > 0
+        ? (totalMinutes / targetMinutes * 100).clamp(0, 100)
         : 0.0;
 
     return {
       'totalMinutes': totalMinutes,
-      'targetMinutes': subject.targetMinutes,
+      'targetMinutes': targetMinutes,
       'progressPercentage': progressPercentage,
-      'remainingMinutes': (subject.targetMinutes - totalMinutes).clamp(0, subject.targetMinutes),
+      'remainingMinutes': (targetMinutes - totalMinutes).clamp(0, targetMinutes),
     };
   }
 
@@ -174,7 +175,7 @@ class SubjectService extends ChangeNotifier {
         _subjects.sort((a, b) => a.name.compareTo(b.name));
         break;
       case 'target':
-        _subjects.sort((a, b) => b.targetMinutes.compareTo(a.targetMinutes));
+        _subjects.sort((a, b) => (b.dailyTarget?.inMinutes ?? 0).compareTo(a.dailyTarget?.inMinutes ?? 0));
         break;
       case 'created':
         _subjects.sort((a, b) => b.createdAt.compareTo(a.createdAt));
