@@ -20,6 +20,8 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+    _subjectService.loadSubjects();
+    _subjectService.addListener(_onSubjectUpdate);
     _pulseController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -41,7 +43,14 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
     _pulseController.dispose();
     _timerService.removeListener(_onTimerUpdate);
     _timerService.isTargetCompleted.removeListener(_onTargetCompleted);
+    _subjectService.removeListener(_onSubjectUpdate);
     super.dispose();
+  }
+
+  void _onSubjectUpdate() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _onTimerUpdate() {
@@ -95,16 +104,35 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
   void _showSubjectSelectionDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Subject'),
-        content: const Text('Please select a subject before starting your study session.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+      builder: (context) {
+        final subjects = _subjectService.subjects;
+        return AlertDialog(
+          title: const Text('Select Subject'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: subjects.length,
+              itemBuilder: (context, index) {
+                final subject = subjects[index];
+                return ListTile(
+                  title: Text(subject.name),
+                  onTap: () {
+                    _subjectService.selectSubject(subject);
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
           ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -311,20 +339,29 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
           child: Column(
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(
-                    Icons.book,
-                    color: Colors.blue[600],
-                    size: 24,
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.book,
+                        color: Colors.blue[600],
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Current Subject',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Current Subject',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[700],
-                    ),
+                  TextButton(
+                    onPressed: _showSubjectSelectionDialog,
+                    child: Text(selectedSubject == null ? 'Select' : 'Change'),
                   ),
                 ],
               ),
@@ -370,6 +407,7 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
                   ],
                 ),
               ] else ...[
+                const SizedBox(height: 10),
                 Text(
                   'No subject selected',
                   style: TextStyle(
@@ -379,11 +417,12 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Go to Subjects tab to select a subject',
+                  'Please select a subject to start studying',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[400],
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ],
