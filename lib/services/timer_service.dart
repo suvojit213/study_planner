@@ -17,6 +17,7 @@ class TimerService extends ChangeNotifier {
   Timer? _timer;
   TimerState _state = TimerState.stopped;
   int _elapsedSeconds = 0;
+  int _lastCompletedSessionDuration = 0;
   Subject? _currentSubject;
   StudySession? _currentSession;
   final DatabaseHelper _dbHelper = DatabaseHelper();
@@ -26,6 +27,7 @@ class TimerService extends ChangeNotifier {
   // Getters
   TimerState get state => _state;
   int get elapsedSeconds => _elapsedSeconds;
+  int get lastCompletedSessionDuration => _lastCompletedSessionDuration;
   Subject? get currentSubject => _currentSubject;
   StudySession? get currentSession => _currentSession;
 
@@ -106,6 +108,7 @@ class TimerService extends ChangeNotifier {
     }
 
     if (isCompleted && _currentSubject != null) {
+      _lastCompletedSessionDuration = _elapsedSeconds;
       isTargetCompleted.value = true;
       _showCompletionNotification(_currentSubject!.name);
     }

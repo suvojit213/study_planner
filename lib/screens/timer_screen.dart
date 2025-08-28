@@ -145,7 +145,7 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
       MaterialPageRoute(
         builder: (context) => AlarmScreen(
           subject: subject,
-          duration: Duration(seconds: _timerService.elapsedSeconds),
+          duration: Duration(seconds: _timerService.lastCompletedSessionDuration),
         ),
       ),
     );
