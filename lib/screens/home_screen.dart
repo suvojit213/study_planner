@@ -21,12 +21,20 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadTodayProgress();
     _timerService.addListener(_onTimerUpdate);
+    _timerService.isTargetCompleted.addListener(_onTargetCompleted);
   }
 
   @override
   void dispose() {
     _timerService.removeListener(_onTimerUpdate);
+    _timerService.isTargetCompleted.removeListener(_onTargetCompleted);
     super.dispose();
+  }
+
+  void _onTargetCompleted() {
+    if (_timerService.isTargetCompleted.value) {
+      _loadTodayProgress();
+    }
   }
 
   void _onTimerUpdate() {
