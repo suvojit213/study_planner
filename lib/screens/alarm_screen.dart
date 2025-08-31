@@ -1,7 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:lottie/lottie.dart';
+import 'package:study_planner/screens/home_screen.dart';
+import '../database/database_helper.dart';
+import '../models/study_session.dart';
 import '../models/subject.dart';
 
 class AlarmScreen extends StatefulWidget {
@@ -19,6 +21,8 @@ class AlarmScreen extends StatefulWidget {
 }
 
 class _AlarmScreenState extends State<AlarmScreen> {
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +35,28 @@ class _AlarmScreenState extends State<AlarmScreen> {
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return '$hours:$minutes:$seconds';
+  }
+
+  Future<void> _stopAndSave() async {
+    FlutterRingtonePlayer().stop();
+
+    final session = StudySession(
+      subjectId: widget.subject.id!,
+      startTime: DateTime.now().subtract(widget.duration),
+      endTime: DateTime.now(),
+      durationMinutes: widget.duration.inMinutes,
+      isCompleted: true,
+    );
+
+    await _databaseHelper.insertStudySession(session);
+
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        (Route<dynamic> route) => false,
+      );
+    }
   }
 
   @override
@@ -81,10 +107,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                   ),
                   const SizedBox(height: 30),
                   ElevatedButton.icon(
-                    onPressed: () {
-                      FlutterRingtonePlayer().stop();
-                      Navigator.pop(context);
-                    },
+                    onPressed: _stopAndSave,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       padding: const EdgeInsets.symmetric(
