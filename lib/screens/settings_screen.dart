@@ -104,38 +104,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-larmSound);
-      _loadAlarmSound();
-    }
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
-      body: Consumer<ThemeService>(
-        builder: (context, themeService, child) {
-          return ListView(
-            children: [
-              ListTile(
-                title: const Text('Alarm Sound'),
-                subtitle: Text(_alarmSound ?? 'Default'),
-                onTap: _pickAndSetAlarmSound,
-              ),
-              SwitchListTile(
-                title: const Text('Dark Mode'),
-                value: themeService.themeMode == ThemeMode.dark,
-                onChanged: (value) {
-                  themeService.setThemeMode(
-                      value ? ThemeMode.dark : ThemeMode.light);
-                },
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
