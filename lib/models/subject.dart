@@ -1,9 +1,12 @@
+import 'package:flutter/material.dart';
+
 class Subject {
   final int? id;
   final String name;
   final String? description;
   final Duration? dailyTarget;
   final DateTime createdAt;
+  final Color color;
 
   Subject({
     this.id,
@@ -11,6 +14,7 @@ class Subject {
     this.description,
     this.dailyTarget,
     required this.createdAt,
+    this.color = Colors.blue,
   });
 
   Map<String, dynamic> toMap() {
@@ -20,6 +24,7 @@ class Subject {
       'description': description,
       'daily_target_minutes': dailyTarget?.inMinutes,
       'created_at': createdAt.millisecondsSinceEpoch,
+      'color': color.value,
     };
   }
 
@@ -32,6 +37,7 @@ class Subject {
           ? Duration(minutes: map['daily_target_minutes'])
           : null,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
+      color: Color(map['color'] ?? Colors.blue.value),
     );
   }
 
@@ -41,6 +47,7 @@ class Subject {
     String? description,
     Duration? dailyTarget,
     DateTime? createdAt,
+    Color? color,
   }) {
     return Subject(
       id: id ?? this.id,
@@ -48,6 +55,7 @@ class Subject {
       description: description ?? this.description,
       dailyTarget: dailyTarget ?? this.dailyTarget,
       createdAt: createdAt ?? this.createdAt,
+      color: color ?? this.color,
     );
   }
 }

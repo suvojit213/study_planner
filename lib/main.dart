@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'services/theme_service.dart';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'services/subject_service.dart';
 import 'screens/home_screen.dart';
@@ -30,7 +32,12 @@ Future<void> main() async {
         ?.requestFullScreenIntentPermission();
   }
 
-  runApp(const StudyPlannerApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeService(),
+      child: const StudyPlannerApp(),
+    ),
+  );
 }
 
 class StudyPlannerApp extends StatelessWidget {
@@ -38,18 +45,31 @@ class StudyPlannerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Study Planner',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-      ),
-      home: const MainScreen(),
-      debugShowCheckedModeBanner: false,
+    return Consumer<ThemeService>(
+      builder: (context, themeService, child) {
+        return MaterialApp(
+          title: 'Study Planner',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: themeService.appColor,
+              brightness: Brightness.light,
+            ),
+            useMaterial3: true,
+            fontFamily: 'Roboto',
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: themeService.appColor,
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+            fontFamily: 'Roboto',
+          ),
+          themeMode: themeService.themeMode,
+          home: const MainScreen(),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }

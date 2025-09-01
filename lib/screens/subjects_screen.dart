@@ -440,10 +440,10 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
         child: ListTile(
           contentPadding: const EdgeInsets.all(16),
           leading: CircleAvatar(
-            backgroundColor: Colors.blue[100],
+            backgroundColor: subject.color.withOpacity(0.2),
             child: Icon(
               Icons.book,
-              color: Colors.blue[600],
+              color: subject.color,
             ),
           ),
           title: Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../models/subject.dart';
 import '../models/study_session.dart';
 import '../services/subject_service.dart';
@@ -16,17 +17,19 @@ class SubjectDetailsScreen extends StatefulWidget {
 class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
   final SubjectService _subjectService = SubjectService();
   late Future<Map<String, dynamic>> _statsFuture;
+  late Subject _subject;
 
   @override
   void initState() {
     super.initState();
+    _subject = widget.subject;
     _statsFuture = _loadStats();
   }
 
   Future<Map<String, dynamic>> _loadStats() async {
-    final totalTime = await _subjectService.getSubjectTotalTime(widget.subject.id!);
-    final avgDuration = await _subjectService.getAverageSessionDuration(widget.subject.id!);
-    final sessions = await _subjectService.getStudySessionsForSubject(widget.subject.id!);
+    final totalTime = await _subjectService.getSubjectTotalTime(_subject.id!);
+    final avgDuration = await _subjectService.getAverageSessionDuration(_subject.id!);
+    final sessions = await _subjectService.getStudySessionsForSubject(_subject.id!);
     return {
       'totalTime': totalTime,
       'avgDuration': avgDuration,
@@ -34,13 +37,82 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
     };
   }
 
+  void _showEditDialog() {
+    final nameController = TextEditingController(text: _subject.name);
+    final descriptionController = TextEditingController(text: _subject.description);
+    Color selectedColor = _subject.color;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Subject'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Subject Name'),
+                ),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(labelText: 'Description'),
+                ),
+                const SizedBox(height: 20),
+                const Text('Subject Color'),
+                const SizedBox(height: 10),
+                ColorPicker(
+                  pickerColor: selectedColor,
+                  onColorChanged: (color) {
+                    selectedColor = color;
+                  },
+                  pickerAreaHeightPercent: 0.8,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final updatedSubject = _subject.copyWith(
+                  name: nameController.text,
+                  description: descriptionController.text,
+                  color: selectedColor,
+                );
+                await _subjectService.updateSubject(updatedSubject);
+                setState(() {
+                  _subject = updatedSubject;
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.subject.name),
-        backgroundColor: Colors.blue[600],
+        title: Text(_subject.name),
+        backgroundColor: _subject.color,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: _showEditDialog,
+          ),
+        ],
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _statsFuture,
@@ -82,9 +154,9 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       children: [
-        _buildStatCard('Total Time', '${totalTime}m', Icons.access_time, Colors.green),
-        _buildStatCard('Avg Session', '${avgDuration.toStringAsFixed(1)}m', Icons.timelapse, Colors.orange),
-        _buildStatCard('Daily Target', _formatDuration(widget.subject.dailyTarget), Icons.today, Colors.blue),
+        _buildStatCard('Total Time', '${totalTime}m', Icons.access_time, _subject.color),
+        _buildStatCard('Avg Session', '${avgDuration.toStringAsFixed(1)}m', Icons.timelapse, _subject.color),
+        _buildStatCard('Daily Target', _formatDuration(_subject.dailyTarget), Icons.today, _subject.color),
       ],
     );
   }
@@ -163,8 +235,8 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
                   leading: CircleAvatar(
-                    backgroundColor: Colors.blue[100],
-                    child: Icon(Icons.history, color: Colors.blue[600]),
+                    backgroundColor: _subject.color.withOpacity(0.2),
+                    child: Icon(Icons.history, color: _subject.color),
                   ),
                   title: Text(
                     '${session.durationMinutes} minutes',
