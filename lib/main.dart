@@ -104,6 +104,9 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final themeService = Provider.of<ThemeService>(context, listen: false);
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -111,7 +114,7 @@ class _MainScreenState extends State<MainScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -130,21 +133,29 @@ class _MainScreenState extends State<MainScreen> {
                   icon: Icons.home,
                   label: 'Home',
                   index: 0,
+                  theme: theme,
+                  appColor: themeService.appColor,
                 ),
                 _buildNavItem(
                   icon: Icons.timer,
                   label: 'Timer',
                   index: 1,
+                  theme: theme,
+                  appColor: themeService.appColor,
                 ),
                 _buildNavItem(
                   icon: Icons.book,
                   label: 'Subjects',
                   index: 2,
+                  theme: theme,
+                  appColor: themeService.appColor,
                 ),
                 _buildNavItem(
                   icon: Icons.settings,
                   label: 'Settings',
                   index: 3,
+                  theme: theme,
+                  appColor: themeService.appColor,
                 ),
               ],
             ),
@@ -158,9 +169,11 @@ class _MainScreenState extends State<MainScreen> {
     required IconData icon,
     required String label,
     required int index,
+    required ThemeData theme,
+    required Color appColor,
   }) {
     final isSelected = _currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -171,7 +184,7 @@ class _MainScreenState extends State<MainScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue[600] : Colors.transparent,
+          color: isSelected ? appColor : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -179,15 +192,17 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? Colors.white : Colors.grey[600],
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurface.withOpacity(0.6),
               size: 24,
             ),
             if (isSelected) ...[
               const SizedBox(width: 8),
               Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: theme.colorScheme.onPrimary,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
