@@ -40,12 +40,15 @@ class _AlarmScreenState extends State<AlarmScreen> {
   Future<void> _stopAndSave() async {
     FlutterRingtonePlayer().stop();
 
+    final notes = await _showAddNoteDialog();
+
     final session = StudySession(
       subjectId: widget.subject.id!,
       startTime: DateTime.now().subtract(widget.duration),
       endTime: DateTime.now(),
       durationMinutes: widget.duration.inMinutes,
       isCompleted: true,
+      notes: notes,
     );
 
     await _databaseHelper.insertStudySession(session);
@@ -59,10 +62,44 @@ class _AlarmScreenState extends State<AlarmScreen> {
     }
   }
 
+  Future<String?> _showAddNoteDialog() {
+    final notesController = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add Notes'),
+          content: TextField(
+            controller: notesController,
+            decoration: const InputDecoration(
+              hintText: 'Write something about this session...',
+            ),
+            maxLines: 3,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(null);
+              },
+              child: const Text('Skip'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(notesController.text);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.blue[100],
+      backgroundColor: theme.colorScheme.primaryContainer,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -87,7 +124,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue[800],
+                      color: theme.colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -109,7 +146,8 @@ class _AlarmScreenState extends State<AlarmScreen> {
                   ElevatedButton.icon(
                     onPressed: _stopAndSave,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: theme.colorScheme.error,
+                      foregroundColor: theme.colorScheme.onError,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 30,
                         vertical: 15,
@@ -118,12 +156,11 @@ class _AlarmScreenState extends State<AlarmScreen> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
-                    icon: const Icon(Icons.stop, color: Colors.white),
+                    icon: const Icon(Icons.stop),
                     label: const Text(
                       'Stop Alarm',
                       style: TextStyle(
                         fontSize: 18,
-                        color: Colors.white,
                       ),
                     ),
                   ),

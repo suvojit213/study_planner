@@ -245,11 +245,55 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
                   subtitle: Text(
                     DateFormat.yMMMd().add_jm().format(session.startTime),
                   ),
+                  trailing: (session.notes?.isNotEmpty ?? false)
+                      ? const Icon(Icons.note)
+                      : null,
+                  onTap: () {
+                    _showNoteDialog(session);
+                  },
                 ),
               );
             },
           ),
       ],
+    );
+  }
+
+  void _showNoteDialog(StudySession session) {
+    final notesController = TextEditingController(text: session.notes);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Session Notes'),
+          content: TextField(
+            controller: notesController,
+            decoration: const InputDecoration(
+              hintText: 'Write something about this session...',
+            ),
+            maxLines: 5,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final updatedSession = session.copyWith(notes: notesController.text);
+                await _subjectService.updateStudySession(updatedSession);
+                setState(() {
+                  _statsFuture = _loadStats();
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

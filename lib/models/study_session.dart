@@ -5,6 +5,7 @@ class StudySession {
   final DateTime? endTime;
   final int durationMinutes;
   final bool isCompleted;
+  final String? notes;
 
   StudySession({
     this.id,
@@ -13,6 +14,7 @@ class StudySession {
     this.endTime,
     required this.durationMinutes,
     required this.isCompleted,
+    this.notes,
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class StudySession {
       'end_time': endTime?.millisecondsSinceEpoch,
       'duration_minutes': durationMinutes,
       'is_completed': isCompleted ? 1 : 0,
+      'notes': notes,
     };
   }
 
@@ -31,11 +34,12 @@ class StudySession {
       id: map['id'],
       subjectId: map['subject_id'],
       startTime: DateTime.fromMillisecondsSinceEpoch(map['start_time']),
-      endTime: map['end_time'] != null 
+      endTime: map['end_time'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['end_time'])
           : null,
       durationMinutes: map['duration_minutes'],
       isCompleted: map['is_completed'] == 1,
+      notes: map['notes'],
     );
   }
 
@@ -46,6 +50,7 @@ class StudySession {
     DateTime? endTime,
     int? durationMinutes,
     bool? isCompleted,
+    String? notes,
   }) {
     return StudySession(
       id: id ?? this.id,
@@ -54,6 +59,7 @@ class StudySession {
       endTime: endTime ?? this.endTime,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       isCompleted: isCompleted ?? this.isCompleted,
+      notes: notes ?? this.notes,
     );
   }
 }
