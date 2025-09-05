@@ -112,104 +112,35 @@ class _MainScreenState extends State<MainScreen> {
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  icon: Icons.home,
-                  label: 'Home',
-                  index: 0,
-                  theme: theme,
-                  appColor: themeService.appColor,
-                ),
-                _buildNavItem(
-                  icon: Icons.timer,
-                  label: 'Timer',
-                  index: 1,
-                  theme: theme,
-                  appColor: themeService.appColor,
-                ),
-                _buildNavItem(
-                  icon: Icons.book,
-                  label: 'Subjects',
-                  index: 2,
-                  theme: theme,
-                  appColor: themeService.appColor,
-                ),
-                _buildNavItem(
-                  icon: Icons.settings,
-                  label: 'Settings',
-                  index: 3,
-                  theme: theme,
-                  appColor: themeService.appColor,
-                ),
-              ],
-            ),
+      bottomNavigationBar: NavigationBar(
+        onDestinationSelected: (int index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        selectedIndex: _currentIndex,
+        destinations: const <Widget>[
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required int index,
-    required ThemeData theme,
-    required Color appColor,
-  }) {
-    final isSelected = _currentIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? appColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? theme.colorScheme.onPrimary
-                  : theme.colorScheme.onSurface.withOpacity(0.6),
-              size: 24,
-            ),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: theme.colorScheme.onPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ],
-        ),
+          NavigationDestination(
+            icon: Icon(Icons.timer_outlined),
+            selectedIcon: Icon(Icons.timer),
+            label: 'Timer',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.book_outlined),
+            selectedIcon: Icon(Icons.book),
+            label: 'Subjects',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
       ),
     );
   }
