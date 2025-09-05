@@ -32,6 +32,7 @@ class SubjectService extends ChangeNotifier {
     required String name,
     String? description,
     Duration? dailyTarget,
+    Color? color,
   }) async {
     try {
       // Check if subject with same name already exists
@@ -44,6 +45,7 @@ class SubjectService extends ChangeNotifier {
         description: description,
         dailyTarget: dailyTarget,
         createdAt: DateTime.now(),
+        color: color ?? Colors.blue,
       );
 
       final id = await _dbHelper.insertSubject(subject);

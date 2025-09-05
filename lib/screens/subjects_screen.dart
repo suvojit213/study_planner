@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../services/subject_service.dart';
 import '../models/subject.dart';
 import './subject_details_screen.dart';
@@ -49,6 +50,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     final descriptionController = TextEditingController();
     final hoursController = TextEditingController();
     final minutesController = TextEditingController();
+    Color selectedColor = Colors.blue;
 
     showDialog(
       context: context,
@@ -100,6 +102,15 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
+              const Text('Subject Color'),
+              const SizedBox(height: 10),
+              BlockPicker(
+                pickerColor: selectedColor,
+                onColorChanged: (color) {
+                  selectedColor = color;
+                },
+              ),
             ],
           ),
         ),
@@ -125,6 +136,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                     ? null
                     : descriptionController.text.trim(),
                 dailyTarget: dailyTarget.inMinutes > 0 ? dailyTarget : null,
+                color: selectedColor,
               );
 
               if (success) {

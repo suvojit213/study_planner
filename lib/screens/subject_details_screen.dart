@@ -71,12 +71,11 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
                 const SizedBox(height: 20),
                 const Text('Subject Color'),
                 const SizedBox(height: 10),
-                ColorPicker(
+                BlockPicker(
                   pickerColor: selectedColor,
                   onColorChanged: (color) {
                     selectedColor = color;
                   },
-                  pickerAreaHeightPercent: 0.8,
                 ),
               ],
             ),
