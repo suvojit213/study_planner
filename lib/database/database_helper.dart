@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/subject.dart';
 import '../models/study_session.dart';
+import '../models/topic.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -20,7 +21,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'study_planner.db');
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -54,6 +55,17 @@ class DatabaseHelper {
     if (oldVersion < 5) {
       await db.execute('ALTER TABLE study_sessions ADD COLUMN notes TEXT');
     }
+    if (oldVersion < 6) {
+      await db.execute('''
+        CREATE TABLE topics(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          subjectId INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          isCompleted INTEGER NOT NULL,
+          FOREIGN KEY (subjectId) REFERENCES subjects (id) ON DELETE CASCADE
+        )
+      ''');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -77,7 +89,17 @@ class DatabaseHelper {
         duration_minutes INTEGER NOT NULL,
         is_completed INTEGER NOT NULL,
         notes TEXT,
-        FOREIGN KEY (subject_id) REFERENCES subjects (id)
+        FOREIGN KEY (subject_id) REFERENCES subjects (id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE topics(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        subjectId INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        isCompleted INTEGER NOT NULL,
+        FOREIGN KEY (subjectId) REFERENCES subjects (id) ON DELETE CASCADE
       )
     ''');
   }
@@ -224,6 +246,43 @@ class DatabaseHelper {
       todayTime[row['name'] as String] = row['total'] as int? ?? 0;
     }
     return todayTime;
+  }
+
+  // Topic operations
+  Future<int> insertTopic(Topic topic) async {
+    final db = await database;
+    return await db.insert('topics', topic.toMap());
+  }
+
+  Future<List<Topic>> getTopicsForSubject(int subjectId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'topics',
+      where: 'subjectId = ?',
+      whereArgs: [subjectId],
+    );
+    return List.generate(maps.length, (i) {
+      return Topic.fromMap(maps[i]);
+    });
+  }
+
+  Future<int> updateTopic(Topic topic) async {
+    final db = await database;
+    return await db.update(
+      'topics',
+      topic.toMap(),
+      where: 'id = ?',
+      whereArgs: [topic.id],
+    );
+  }
+
+  Future<int> deleteTopic(int id) async {
+    final db = await database;
+    return await db.delete(
+      'topics',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }
 
