@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 import '../services/settings_service.dart';
 import '../services/theme_service.dart';
@@ -36,34 +35,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _showColorPicker(BuildContext context, ThemeService themeService) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Pick a color'),
-          content: SingleChildScrollView(
-            child: ColorPicker(
-              pickerColor: themeService.appColor,
-              onColorChanged: (color) {
-                themeService.setAppColor(color);
-              },
-              pickerAreaHeightPercent: 0.8,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,16 +56,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onChanged: (value) {
                   themeService.setThemeMode(
                       value ? ThemeMode.dark : ThemeMode.light);
-                },
-              ),
-              ListTile(
-                title: const Text('App Color'),
-                trailing: CircleAvatar(
-                  backgroundColor: themeService.appColor,
-                  radius: 15,
-                ),
-                onTap: () {
-                  _showColorPicker(context, themeService);
                 },
               ),
             ],

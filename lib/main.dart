@@ -51,7 +51,7 @@ class StudyPlannerApp extends StatelessWidget {
           title: 'Study Planner',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: themeService.appColor,
+              seedColor: Colors.blue,
               brightness: Brightness.light,
             ),
             useMaterial3: true,
@@ -59,7 +59,7 @@ class StudyPlannerApp extends StatelessWidget {
           ),
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
-              seedColor: themeService.appColor,
+              seedColor: Colors.blue,
               brightness: Brightness.dark,
             ),
             useMaterial3: true,
