@@ -495,44 +495,20 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
               ),
             ],
           ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListenableBuilder(
-                listenable: _subjectService,
-                builder: (context, child) {
-                  final isSelected = _subjectService.selectedSubject?.id == subject.id;
-                  return IconButton(
-                    onPressed: () {
-                      if (isSelected) {
-                        _subjectService.clearSelection();
-                      } else {
-                        _subjectService.selectSubject(subject);
-                      }
-                    },
-                    icon: Icon(
-                      isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                      color: isSelected ? Colors.blue[600] : Colors.grey[400],
-                    ),
-                  );
-                },
-              ),
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  switch (value) {
-                    case 'edit':
-                      _showEditSubjectDialog(subject);
-                      break;
-                    case 'delete':
-                      _showDeleteConfirmation(subject);
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                  const PopupMenuItem(value: 'delete', child: Text('Delete')),
-                ],
-              ),
+          trailing: PopupMenuButton<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'edit':
+                  _showEditSubjectDialog(subject);
+                  break;
+                case 'delete':
+                  _showDeleteConfirmation(subject);
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'edit', child: Text('Edit')),
+              const PopupMenuItem(value: 'delete', child: Text('Delete')),
             ],
           ),
         ),
