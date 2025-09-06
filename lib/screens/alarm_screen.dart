@@ -54,11 +54,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
     await _databaseHelper.insertStudySession(session);
 
     if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-        (Route<dynamic> route) => false,
-      );
+      Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
 
