@@ -36,3 +36,6 @@ config.json
 
 # Log files
 *.log
+# Keystore files
+keystore.jks
+keystore.txt
