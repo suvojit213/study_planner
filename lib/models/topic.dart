@@ -12,6 +12,20 @@ class Topic {
     this.isCompleted = false,
   });
 
+  Topic copyWith({
+    int? id,
+    int? subjectId,
+    String? name,
+    bool? isCompleted,
+  }) {
+    return Topic(
+      id: id ?? this.id,
+      subjectId: subjectId ?? this.subjectId,
+      name: name ?? this.name,
+      isCompleted: isCompleted ?? this.isCompleted,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
