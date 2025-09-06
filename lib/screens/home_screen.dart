@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/timer_service.dart';
 import '../services/subject_service.dart';
 import '../models/subject.dart';
+import './schedule_screen.dart'; // Import the new screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,6 +58,44 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Study Planner',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+            Text(
+              'Track your learning journey',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFFF8F9FA),
+        elevation: 0,
+        toolbarHeight: 70,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.schedule, color: Colors.grey[700], size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ScheduleScreen()),
+              );
+            },
+            tooltip: 'Weekly Schedule',
+          ),
+          const SizedBox(width: 10),
+        ],
+      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadTodayProgress,
@@ -66,8 +105,6 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
-                const SizedBox(height: 24),
                 _buildCurrentSession(),
                 const SizedBox(height: 24),
                 _buildTodayOverview(),
@@ -78,30 +115,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Study Planner',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Track your learning journey',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
     );
   }
 

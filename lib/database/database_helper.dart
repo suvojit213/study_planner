@@ -1,8 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/subject.dart';
 import '../models/study_session.dart';
 import '../models/topic.dart';
+import '../models/scheduled_session.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -10,6 +12,7 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static Database? _database;
+  static const _dbVersion = 7;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -21,7 +24,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'study_planner.db');
     return await openDatabase(
       path,
-      version: 6,
+      version: _dbVersion,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -56,20 +59,21 @@ class DatabaseHelper {
       await db.execute('ALTER TABLE study_sessions ADD COLUMN notes TEXT');
     }
     if (oldVersion < 6) {
-      await db.execute('''
-        CREATE TABLE topics(
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          subjectId INTEGER NOT NULL,
-          name TEXT NOT NULL,
-          isCompleted INTEGER NOT NULL,
-          FOREIGN KEY (subjectId) REFERENCES subjects (id) ON DELETE CASCADE
-        )
-      ''');
+      await db.execute(_createTopicsTable);
+    }
+    if (oldVersion < 7) {
+      await db.execute(_createScheduledSessionsTable);
     }
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
+    await db.execute(_createSubjectsTable);
+    await db.execute(_createStudySessionsTable);
+    await db.execute(_createTopicsTable);
+    await db.execute(_createScheduledSessionsTable);
+  }
+
+  static const String _createSubjectsTable = '''
       CREATE TABLE subjects(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -78,9 +82,9 @@ class DatabaseHelper {
         created_at INTEGER NOT NULL,
         color INTEGER
       )
-    ''');
+    ''';
 
-    await db.execute('''
+  static const String _createStudySessionsTable = '''
       CREATE TABLE study_sessions(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         subject_id INTEGER NOT NULL,
@@ -91,9 +95,9 @@ class DatabaseHelper {
         notes TEXT,
         FOREIGN KEY (subject_id) REFERENCES subjects (id) ON DELETE CASCADE
       )
-    ''');
+    ''';
 
-    await db.execute('''
+  static const String _createTopicsTable = '''
       CREATE TABLE topics(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         subjectId INTEGER NOT NULL,
@@ -101,8 +105,18 @@ class DatabaseHelper {
         isCompleted INTEGER NOT NULL,
         FOREIGN KEY (subjectId) REFERENCES subjects (id) ON DELETE CASCADE
       )
-    ''');
-  }
+    ''';
+
+  static const String _createScheduledSessionsTable = '''
+      CREATE TABLE scheduled_sessions(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        subjectId INTEGER NOT NULL,
+        startTime TEXT NOT NULL,
+        durationMinutes INTEGER NOT NULL,
+        repeatDays TEXT NOT NULL,
+        FOREIGN KEY (subjectId) REFERENCES subjects (id) ON DELETE CASCADE
+      )
+    ''';
 
   // Subject operations
   Future<int> insertSubject(Subject subject) async {
@@ -280,6 +294,39 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete(
       'topics',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Scheduled Session operations
+  Future<int> insertScheduledSession(ScheduledSession session) async {
+    final db = await database;
+    return await db.insert('scheduled_sessions', session.toMap());
+  }
+
+  Future<List<Map<String, dynamic>>> getScheduledSessions() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT
+        ss.id,
+        ss.subjectId,
+        ss.startTime,
+        ss.durationMinutes,
+        ss.repeatDays,
+        s.name as subjectName,
+        s.color as subjectColor
+      FROM scheduled_sessions ss
+      JOIN subjects s ON ss.subjectId = s.id
+      ORDER BY ss.startTime
+    ''');
+    return maps;
+  }
+
+  Future<int> deleteScheduledSession(int id) async {
+    final db = await database;
+    return await db.delete(
+      'scheduled_sessions',
       where: 'id = ?',
       whereArgs: [id],
     );
