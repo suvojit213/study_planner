@@ -12,7 +12,7 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static Database? _database;
-  static const _dbVersion = 7;
+  static const _dbVersion = 8;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -64,6 +64,10 @@ class DatabaseHelper {
     if (oldVersion < 7) {
       await db.execute(_createScheduledSessionsTable);
     }
+    if (oldVersion < 8) {
+      await db.execute('ALTER TABLE topics ADD COLUMN startDate TEXT');
+      await db.execute('ALTER TABLE topics ADD COLUMN endDate TEXT');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -103,6 +107,8 @@ class DatabaseHelper {
         subjectId INTEGER NOT NULL,
         name TEXT NOT NULL,
         isCompleted INTEGER NOT NULL,
+        startDate TEXT,
+        endDate TEXT,
         FOREIGN KEY (subjectId) REFERENCES subjects (id) ON DELETE CASCADE
       )
     ''';

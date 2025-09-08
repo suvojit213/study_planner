@@ -308,6 +308,10 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
                               : null,
                         ),
                       ),
+                      subtitle: topic.startDate != null && topic.endDate != null
+                          ? Text(
+                              '${DateFormat.yMd().format(topic.startDate!)} - ${DateFormat.yMd().format(topic.endDate!)}')
+                          : null,
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -399,15 +403,75 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
 
   void _showAddTopicDialog() {
     final nameController = TextEditingController();
+    DateTime? startDate;
+    DateTime? endDate;
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Add Topic'),
-          content: TextField(
-            controller: nameController,
-            decoration: const InputDecoration(labelText: 'Topic Name'),
-            autofocus: true,
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Topic Name'),
+                      autofocus: true,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () async {
+                            final pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: startDate ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2101),
+                            );
+                            if (pickedDate != null) {
+                              setState(() {
+                                startDate = pickedDate;
+                              });
+                            }
+                          },
+                          child: Text(
+                            startDate == null
+                                ? 'Select Start Date'
+                                : 'Start: ${DateFormat.yMd().format(startDate!)}',
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            final pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: endDate ?? startDate ?? DateTime.now(),
+                              firstDate: startDate ?? DateTime(2000),
+                              lastDate: DateTime(2101),
+                            );
+                            if (pickedDate != null) {
+                              setState(() {
+                                endDate = pickedDate;
+                              });
+                            }
+                          },
+                          child: Text(
+                            endDate == null
+                                ? 'Select End Date'
+                                : 'End: ${DateFormat.yMd().format(endDate!)}',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
           actions: [
             TextButton(
@@ -420,6 +484,8 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
                   final newTopic = Topic(
                     subjectId: _subject.id!,
                     name: nameController.text,
+                    startDate: startDate,
+                    endDate: endDate,
                   );
                   await dbHelper.insertTopic(newTopic);
                   setState(() {
@@ -438,15 +504,75 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
 
   void _showEditTopicDialog(Topic topic) {
     final nameController = TextEditingController(text: topic.name);
+    DateTime? startDate = topic.startDate;
+    DateTime? endDate = topic.endDate;
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Edit Topic'),
-          content: TextField(
-            controller: nameController,
-            decoration: const InputDecoration(labelText: 'Topic Name'),
-            autofocus: true,
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Topic Name'),
+                      autofocus: true,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () async {
+                            final pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: startDate ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2101),
+                            );
+                            if (pickedDate != null) {
+                              setState(() {
+                                startDate = pickedDate;
+                              });
+                            }
+                          },
+                          child: Text(
+                            startDate == null
+                                ? 'Select Start Date'
+                                : 'Start: ${DateFormat.yMd().format(startDate!)}',
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            final pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: endDate ?? startDate ?? DateTime.now(),
+                              firstDate: startDate ?? DateTime(2000),
+                              lastDate: DateTime(2101),
+                            );
+                            if (pickedDate != null) {
+                              setState(() {
+                                endDate = pickedDate;
+                              });
+                            }
+                          },
+                          child: Text(
+                            endDate == null
+                                ? 'Select End Date'
+                                : 'End: ${DateFormat.yMd().format(endDate!)}',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
           actions: [
             TextButton(
@@ -456,7 +582,11 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
             TextButton(
               onPressed: () async {
                 if (nameController.text.isNotEmpty) {
-                  final updatedTopic = topic.copyWith(name: nameController.text);
+                  final updatedTopic = topic.copyWith(
+                    name: nameController.text,
+                    startDate: startDate,
+                    endDate: endDate,
+                  );
                   await dbHelper.updateTopic(updatedTopic);
                   setState(() {
                     _topicsFuture = _loadTopics();

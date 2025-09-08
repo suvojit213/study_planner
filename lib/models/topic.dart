@@ -4,12 +4,16 @@ class Topic {
   final int subjectId;
   final String name;
   bool isCompleted;
+  DateTime? startDate;
+  DateTime? endDate;
 
   Topic({
     this.id,
     required this.subjectId,
     required this.name,
     this.isCompleted = false,
+    this.startDate,
+    this.endDate,
   });
 
   Topic copyWith({
@@ -17,12 +21,16 @@ class Topic {
     int? subjectId,
     String? name,
     bool? isCompleted,
+    DateTime? startDate,
+    DateTime? endDate,
   }) {
     return Topic(
       id: id ?? this.id,
       subjectId: subjectId ?? this.subjectId,
       name: name ?? this.name,
       isCompleted: isCompleted ?? this.isCompleted,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
     );
   }
 
@@ -32,6 +40,8 @@ class Topic {
       'subjectId': subjectId,
       'name': name,
       'isCompleted': isCompleted ? 1 : 0,
+      'startDate': startDate?.toIso8601String(),
+      'endDate': endDate?.toIso8601String(),
     };
   }
 
@@ -41,6 +51,8 @@ class Topic {
       subjectId: map['subjectId'],
       name: map['name'],
       isCompleted: map['isCompleted'] == 1,
+      startDate: map['startDate'] != null ? DateTime.parse(map['startDate']) : null,
+      endDate: map['endDate'] != null ? DateTime.parse(map['endDate']) : null,
     );
   }
 }
