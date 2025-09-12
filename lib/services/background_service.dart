@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:study_planner/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:study_planner/models/subject.dart';
 import 'package:study_planner/services/settings_service.dart';
 import 'package:study_planner/database/database_helper.dart';
@@ -38,12 +38,32 @@ Future<bool> onBackground(ServiceInstance service) async {
 void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
 
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
   Timer? _timer;
   int _elapsedSeconds = 0;
   Subject? _currentSubject;
   StudySession? _currentSession;
   final DatabaseHelper _dbHelper = DatabaseHelper();
   final SettingsService _settingsService = SettingsService();
+  SharedPreferences? _prefs;
+
+  Future<void> _saveState(String status) async {
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.setString('timer_status', status);
+    if (_currentSubject != null) {
+      await _prefs!.setString('timer_subject', _currentSubject!.name);
+    }
+    await _prefs!.setInt('timer_elapsed', _elapsedSeconds);
+  }
+
+  Future<void> _clearState() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    await _prefs!.remove('timer_status');
+    await _prefs!.remove('timer_subject');
+    await _prefs!.remove('timer_elapsed');
+  }
 
   service.on('start').listen((event) async {
     _currentSubject = Subject.fromMap(event!['subject']);
@@ -63,6 +83,7 @@ void onStart(ServiceInstance service) async {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       _elapsedSeconds++;
       service.invoke('update', {'elapsedSeconds': _elapsedSeconds});
+      await _saveState('running');
 
       if (_currentSubject != null &&
           _currentSubject!.dailyTarget != null &&
@@ -76,7 +97,7 @@ void onStart(ServiceInstance service) async {
         );
         await _dbHelper.updateStudySession(updatedSession);
         
-        _showCompletionNotification(_currentSubject!.name, _settingsService);
+        _showCompletionNotification(flutterLocalNotificationsPlugin, _currentSubject!.name, _settingsService);
         FlutterRingtonePlayer().playAlarm();
 
         service.invoke('completed', {'subject': _currentSubject!.toMap(), 'duration': _elapsedSeconds});
@@ -85,6 +106,7 @@ void onStart(ServiceInstance service) async {
         _currentSubject = null;
         _currentSession = null;
         _elapsedSeconds = 0;
+        await _clearState();
       }
 
       if (_elapsedSeconds % 60 == 0 && _currentSession != null) {
@@ -96,8 +118,9 @@ void onStart(ServiceInstance service) async {
     });
   });
 
-  service.on('pause').listen((event) {
+  service.on('pause').listen((event) async {
     _timer?.cancel();
+    await _saveState('paused');
   });
 
   service.on('resume').listen((event) {
@@ -105,6 +128,7 @@ void onStart(ServiceInstance service) async {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       _elapsedSeconds++;
       service.invoke('update', {'elapsedSeconds': _elapsedSeconds});
+      await _saveState('running');
 
       if (_currentSubject != null &&
           _currentSubject!.dailyTarget != null &&
@@ -118,7 +142,7 @@ void onStart(ServiceInstance service) async {
         );
         await _dbHelper.updateStudySession(updatedSession);
 
-        _showCompletionNotification(_currentSubject!.name, _settingsService);
+        _showCompletionNotification(flutterLocalNotificationsPlugin, _currentSubject!.name, _settingsService);
         FlutterRingtonePlayer().playAlarm();
         
         service.invoke('completed', {'subject': _currentSubject!.toMap(), 'duration': _elapsedSeconds});
@@ -127,6 +151,7 @@ void onStart(ServiceInstance service) async {
         _currentSubject = null;
         _currentSession = null;
         _elapsedSeconds = 0;
+        await _clearState();
       }
       
       if (_elapsedSeconds % 60 == 0 && _currentSession != null) {
@@ -151,10 +176,11 @@ void onStart(ServiceInstance service) async {
     _currentSubject = null;
     _currentSession = null;
     _elapsedSeconds = 0;
+    await _clearState();
   });
 }
 
-Future<void> _showCompletionNotification(String subjectName, SettingsService settingsService) async {
+Future<void> _showCompletionNotification(FlutterLocalNotificationsPlugin plugin, String subjectName, SettingsService settingsService) async {
     final customAlarmSound = await settingsService.getAlarmSound();
     final defaultAlarmSound = await settingsService.getDefaultAlarmSound();
     final alarmSound = customAlarmSound ?? defaultAlarmSound;
@@ -171,7 +197,7 @@ Future<void> _showCompletionNotification(String subjectName, SettingsService set
     );
     final NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
+    await plugin.show(
       0,
       'Target Completed!',
       'Congratulations! You have completed your study target for \$subjectName.',

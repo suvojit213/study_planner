@@ -36,6 +36,11 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
     
     _timerService.addListener(_onTimerUpdate);
     _timerService.isTargetCompleted.addListener(_onTargetCompleted);
+
+    // Check if target was completed while app was closed
+    if (_timerService.isTargetCompleted.value) {
+      _onTargetCompleted();
+    }
   }
 
   @override
@@ -137,7 +142,7 @@ class _TimerScreenState extends State<TimerScreen> with TickerProviderStateMixin
   }
 
   Future<void> _showCompletionDialog() async {
-    final subject = _subjectService.selectedSubject;
+    final subject = _timerService.currentSubject;
     if (subject == null) return;
 
     Navigator.push(

@@ -180,6 +180,16 @@ class SubjectService extends ChangeNotifier {
     ).toList();
   }
 
+  // Get subject by name
+  Future<Subject?> getSubjectByName(String name) async {
+    await loadSubjects();
+    try {
+      return _subjects.firstWhere((subject) => subject.name == name);
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Sort subjects by different criteria
   void sortSubjects(String criteria) {
     switch (criteria) {
@@ -196,4 +206,3 @@ class SubjectService extends ChangeNotifier {
     notifyListeners();
   }
 }
-

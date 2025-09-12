@@ -5,6 +5,9 @@ import '../models/subject.dart';
 import '../models/study_session.dart';
 import '../database/database_helper.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:study_planner/services/subject_service.dart';
+
 enum TimerState { stopped, running, paused }
 
 class TimerService extends ChangeNotifier {
@@ -41,7 +44,27 @@ class TimerService extends ChangeNotifier {
     }
   }
 
-  void _initialize() {
+  void _initialize() async {
+    final prefs = await SharedPreferences.getInstance();
+    final status = prefs.getString('timer_status');
+    if (status != null) {
+      final subjectName = prefs.getString('timer_subject');
+      final elapsed = prefs.getInt('timer_elapsed');
+      if (subjectName != null && elapsed != null) {
+        final subject = await SubjectService().getSubjectByName(subjectName);
+        if (subject != null) {
+          _currentSubject = subject;
+          _elapsedSeconds = elapsed;
+          if (status == 'running') {
+            _state = TimerState.running;
+          } else if (status == 'paused') {
+            _state = TimerState.paused;
+          }
+          notifyListeners();
+        }
+      }
+    }
+
     FlutterBackgroundService().on('update').listen((event) {
       if (event != null) {
         _elapsedSeconds = event['elapsedSeconds'];
@@ -52,9 +75,9 @@ class TimerService extends ChangeNotifier {
     FlutterBackgroundService().on('completed').listen((event) {
       if (event != null) {
         _lastCompletedSessionDuration = event['duration'];
+        _currentSubject = Subject.fromMap(event['subject']);
         isTargetCompleted.value = true;
         _state = TimerState.stopped;
-        _currentSubject = null;
         _currentSession = null;
         _elapsedSeconds = 0;
         notifyListeners();
