@@ -9,6 +9,7 @@ import 'screens/home_screen.dart';
 import 'screens/timer_screen.dart';
 import 'screens/subjects_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/analytics_screen.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -89,6 +90,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const TimerScreen(),
     const SubjectsScreen(),
+    const AnalyticsScreen(),
     const SettingsScreen(),
   ];
 
@@ -134,6 +136,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.book_outlined),
             selectedIcon: Icon(Icons.book),
             label: 'Subjects',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.analytics_outlined),
+            selectedIcon: Icon(Icons.analytics),
+            label: 'Analytics',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

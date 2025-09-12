@@ -268,6 +268,73 @@ class DatabaseHelper {
     return todayTime;
   }
 
+  Future<List<Map<String, dynamic>>> getDailyStudyTime(DateTime startDate, DateTime endDate) async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT
+        strftime('%Y-%m-%d', datetime(start_time / 1000, 'unixepoch')) as study_date,
+        SUM(duration_minutes) as total_minutes
+      FROM study_sessions
+      WHERE start_time >= ? AND start_time < ? AND is_completed = 1
+      GROUP BY study_date
+      ORDER BY study_date
+    ''', [startDate.millisecondsSinceEpoch, endDate.millisecondsSinceEpoch]);
+    return result;
+  }
+
+  Future<List<Map<String, dynamic>>> getWeeklyStudyTime(DateTime startDate, DateTime endDate) async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT
+        strftime('%Y-%W', datetime(start_time / 1000, 'unixepoch')) as study_week,
+        SUM(duration_minutes) as total_minutes
+      FROM study_sessions
+      WHERE start_time >= ? AND start_time < ? AND is_completed = 1
+      GROUP BY study_week
+      ORDER BY study_week
+    ''', [startDate.millisecondsSinceEpoch, endDate.millisecondsSinceEpoch]);
+    return result;
+  }
+
+  Future<List<Map<String, dynamic>>> getMonthlyStudyTime(DateTime startDate, DateTime endDate) async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT
+        strftime('%Y-%m', datetime(start_time / 1000, 'unixepoch')) as study_month,
+        SUM(duration_minutes) as total_minutes
+      FROM study_sessions
+      WHERE start_time >= ? AND start_time < ? AND is_completed = 1
+      GROUP BY study_month
+      ORDER BY study_month
+    ''', [startDate.millisecondsSinceEpoch, endDate.millisecondsSinceEpoch]);
+    return result;
+  }
+
+  Future<List<Map<String, dynamic>>> getSubjectStudyTime() async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT
+        s.name as subject_name,
+        SUM(ss.duration_minutes) as total_minutes
+      FROM study_sessions ss
+      JOIN subjects s ON ss.subject_id = s.id
+      WHERE ss.is_completed = 1
+      GROUP BY s.name
+      ORDER BY total_minutes DESC
+    ''');
+    return result;
+  }
+
+  Future<List<int>> getAllStudySessionDurations() async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT duration_minutes
+      FROM study_sessions
+      WHERE is_completed = 1
+    ''');
+    return result.map((row) => row['duration_minutes'] as int).toList();
+  }
+
   // Topic operations
   Future<int> insertTopic(Topic topic) async {
     final db = await database;
