@@ -289,6 +289,27 @@ class DatabaseHelper {
     return todayTime;
   }
 
+  Future<Map<String, int>> getMonthlyStudyTime() async {
+    final db = await database;
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfMonth = DateTime(now.year, now.month + 1, 0).add(const Duration(days: 1));
+
+    final result = await db.rawQuery('''
+      SELECT s.name, SUM(ss.duration_minutes) as total
+      FROM study_sessions ss
+      JOIN subjects s ON ss.subject_id = s.id
+      WHERE ss.start_time >= ? AND ss.start_time < ? AND ss.is_completed = 1
+      GROUP BY s.id, s.name
+    ''', [startOfMonth.millisecondsSinceEpoch, endOfMonth.millisecondsSinceEpoch]);
+
+    Map<String, int> monthlyTime = {};
+    for (var row in result) {
+      monthlyTime[row['name'] as String] = row['total'] as int? ?? 0;
+    }
+    return monthlyTime;
+  }
+
   // Topic operations
   Future<int> insertTopic(Topic topic) async {
     final db = await database;

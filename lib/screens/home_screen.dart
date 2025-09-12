@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final SubjectService _subjectService = SubjectService();
   final DatabaseHelper _dbHelper = DatabaseHelper();
   Map<String, int> _todayProgress = {};
+  Map<String, int> _monthlyProgress = {};
   int _todayTotal = 0;
   List<Exam> _upcomingExams = [];
 
@@ -51,12 +52,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final total = await _timerService.getTodayTotalMinutes();
     final exams = await _dbHelper.getAllExams();
     exams.sort((a, b) => a.date.compareTo(b.date));
+    final monthlyProgress = await _dbHelper.getMonthlyStudyTime();
 
     if (mounted) {
       setState(() {
         _todayProgress = progress;
         _todayTotal = total;
         _upcomingExams = exams;
+        _monthlyProgress = monthlyProgress;
       });
     }
   }
@@ -117,6 +120,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildUpcomingExams(),
                 const SizedBox(height: 24),
                 _buildTodayOverview(),
+                const SizedBox(height: 24),
+                _buildMonthlyProgress(),
                 const SizedBox(height: 24),
                 _buildSubjectProgress(),
               ],
@@ -409,6 +414,110 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildMonthlyProgress() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.calendar_month,
+                color: Colors.deepPurple[600],
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Monthly Progress',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_monthlyProgress.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.school_outlined,
+                      size: 48,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No study sessions this month',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ..._monthlyProgress.entries.map((entry) {
+              final subject = _subjectService.subjects.firstWhere((s) => s.name == entry.key);
+              final monthlyTarget = subject.monthlyTarget?.inMinutes ?? 0;
+              final progress = monthlyTarget > 0 ? (entry.value / monthlyTarget).clamp(0, 1) : 0.0;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        Text(
+                          '${entry.value} / ${monthlyTarget}m',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(subject.color),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSubjectProgress() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -435,7 +544,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Subject Progress',
+                'Today\'s Subject Progress',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
