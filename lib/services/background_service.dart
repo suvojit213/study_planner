@@ -77,7 +77,7 @@ void onStart(ServiceInstance service) async {
         await _dbHelper.updateStudySession(updatedSession);
         
         _showCompletionNotification(_currentSubject!.name, _settingsService);
-        FlutterRingtonePlayer.playAlarm();
+        FlutterRingtonePlayer().playAlarm();
 
         service.invoke('completed', {'subject': _currentSubject!.toMap(), 'duration': _elapsedSeconds});
         
@@ -119,7 +119,7 @@ void onStart(ServiceInstance service) async {
         await _dbHelper.updateStudySession(updatedSession);
 
         _showCompletionNotification(_currentSubject!.name, _settingsService);
-        FlutterRingtonePlayer.playAlarm();
+        FlutterRingtonePlayer().playAlarm();
         
         service.invoke('completed', {'subject': _currentSubject!.toMap(), 'duration': _elapsedSeconds});
 
