@@ -10,11 +10,14 @@ import 'screens/timer_screen.dart';
 import 'screens/subjects_screen.dart';
 import 'screens/settings_screen.dart';
 
+import 'package:study_planner/services/background_service.dart';
+
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeService();
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
   const InitializationSettings initializationSettings =
