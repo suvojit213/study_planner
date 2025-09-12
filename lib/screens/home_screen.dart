@@ -477,7 +477,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ..._monthlyProgress.entries.map((entry) {
               final subject = _subjectService.subjects.firstWhere((s) => s.name == entry.key);
               final monthlyTarget = subject.monthlyTarget?.inMinutes ?? 0;
-              final progress = monthlyTarget > 0 ? (entry.value / monthlyTarget).clamp(0, 1) : 0.0;
+              final progress = monthlyTarget > 0 ? (entry.value / monthlyTarget).clamp(0.0, 1.0) : 0.0;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Column(
