@@ -164,6 +164,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "flutter_speed_dial",
+      "rootUri": "file:///home/runner/.pub-cache/hosted/pub.dev/flutter_speed_dial-7.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "flutter_test",
       "rootUri": "file:///opt/hostedtoolcache/flutter/stable-3.35.3-x64/packages/flutter_test",
       "packageUri": "lib/",

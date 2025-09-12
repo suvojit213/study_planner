@@ -13,6 +13,7 @@
         "flutter_colorpicker",
         "flutter_local_notifications",
         "flutter_ringtone_player",
+        "flutter_speed_dial",
         "intl",
         "lottie",
         "path_provider",
@@ -62,6 +63,13 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "flutter_speed_dial",
+      "version": "7.0.0",
+      "dependencies": [
+        "flutter"
       ]
     },
     {
