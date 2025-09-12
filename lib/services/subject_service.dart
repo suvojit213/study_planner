@@ -33,6 +33,8 @@ class SubjectService extends ChangeNotifier {
     required String name,
     String? description,
     Duration? dailyTarget,
+    Duration? weeklyTarget,
+    Duration? monthlyTarget,
     Color? color,
   }) async {
     try {
@@ -45,6 +47,8 @@ class SubjectService extends ChangeNotifier {
         name: name,
         description: description,
         dailyTarget: dailyTarget,
+        weeklyTarget: weeklyTarget,
+        monthlyTarget: monthlyTarget,
         createdAt: DateTime.now(),
         color: color ?? Colors.blue,
       );

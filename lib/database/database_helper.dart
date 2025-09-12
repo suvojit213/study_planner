@@ -5,6 +5,7 @@ import '../models/subject.dart';
 import '../models/study_session.dart';
 import '../models/topic.dart';
 import '../models/scheduled_session.dart';
+import '../models/exam.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -12,7 +13,7 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static Database? _database;
-  static const _dbVersion = 8;
+  static const _dbVersion = 10;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -68,6 +69,13 @@ class DatabaseHelper {
       await db.execute('ALTER TABLE topics ADD COLUMN startDate TEXT');
       await db.execute('ALTER TABLE topics ADD COLUMN endDate TEXT');
     }
+    if (oldVersion < 9) {
+      await db.execute('ALTER TABLE subjects ADD COLUMN weekly_target_minutes INTEGER');
+      await db.execute('ALTER TABLE subjects ADD COLUMN monthly_target_minutes INTEGER');
+    }
+    if (oldVersion < 10) {
+      await db.execute(_createExamsTable);
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -75,6 +83,7 @@ class DatabaseHelper {
     await db.execute(_createStudySessionsTable);
     await db.execute(_createTopicsTable);
     await db.execute(_createScheduledSessionsTable);
+    await db.execute(_createExamsTable);
   }
 
   static const String _createSubjectsTable = '''
@@ -83,6 +92,8 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         description TEXT,
         daily_target_minutes INTEGER,
+        weekly_target_minutes INTEGER,
+        monthly_target_minutes INTEGER,
         created_at INTEGER NOT NULL,
         color INTEGER
       )
@@ -120,6 +131,16 @@ class DatabaseHelper {
         startTime TEXT NOT NULL,
         durationMinutes INTEGER NOT NULL,
         repeatDays TEXT NOT NULL,
+        FOREIGN KEY (subjectId) REFERENCES subjects (id) ON DELETE CASCADE
+      )
+    ''';
+
+  static const String _createExamsTable = '''
+      CREATE TABLE exams(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        subjectId INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        date TEXT NOT NULL,
         FOREIGN KEY (subjectId) REFERENCES subjects (id) ON DELETE CASCADE
       )
     ''';
@@ -333,6 +354,51 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete(
       'scheduled_sessions',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Exam operations
+  Future<int> insertExam(Exam exam) async {
+    final db = await database;
+    return await db.insert('exams', exam.toMap());
+  }
+
+  Future<List<Exam>> getExamsForSubject(int subjectId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'exams',
+      where: 'subjectId = ?',
+      whereArgs: [subjectId],
+    );
+    return List.generate(maps.length, (i) {
+      return Exam.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<Exam>> getAllExams() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('exams');
+    return List.generate(maps.length, (i) {
+      return Exam.fromMap(maps[i]);
+    });
+  }
+
+  Future<int> updateExam(Exam exam) async {
+    final db = await database;
+    return await db.update(
+      'exams',
+      exam.toMap(),
+      where: 'id = ?',
+      whereArgs: [exam.id],
+    );
+  }
+
+  Future<int> deleteExam(int id) async {
+    final db = await database;
+    return await db.delete(
+      'exams',
       where: 'id = ?',
       whereArgs: [id],
     );

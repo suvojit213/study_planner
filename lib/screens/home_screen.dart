@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../database/database_helper.dart';
+import '../models/exam.dart';
 import '../services/timer_service.dart';
 import '../services/subject_service.dart';
 import '../models/subject.dart';
@@ -14,13 +16,15 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TimerService _timerService = TimerService();
   final SubjectService _subjectService = SubjectService();
+  final DatabaseHelper _dbHelper = DatabaseHelper();
   Map<String, int> _todayProgress = {};
   int _todayTotal = 0;
+  List<Exam> _upcomingExams = [];
 
   @override
   void initState() {
     super.initState();
-    _loadTodayProgress();
+    _loadData();
     _timerService.addListener(_onTimerUpdate);
     _timerService.isTargetCompleted.addListener(_onTargetCompleted);
   }
@@ -34,22 +38,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onTargetCompleted() {
     if (_timerService.isTargetCompleted.value) {
-      _loadTodayProgress();
+      _loadData();
     }
   }
 
   void _onTimerUpdate() {
-    _loadTodayProgress();
+    _loadData();
   }
 
-  Future<void> _loadTodayProgress() async {
+  Future<void> _loadData() async {
     final progress = await _timerService.getTodayProgress();
     final total = await _timerService.getTodayTotalMinutes();
-    
+    final exams = await _dbHelper.getAllExams();
+    exams.sort((a, b) => a.date.compareTo(b.date));
+
     if (mounted) {
       setState(() {
         _todayProgress = progress;
         _todayTotal = total;
+        _upcomingExams = exams;
       });
     }
   }
@@ -98,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadTodayProgress,
+          onRefresh: _loadData,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(20),
@@ -106,6 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildCurrentSession(),
+                const SizedBox(height: 24),
+                _buildUpcomingExams(),
                 const SizedBox(height: 24),
                 _buildTodayOverview(),
                 const SizedBox(height: 24),
@@ -188,6 +197,121 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildUpcomingExams() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.event_note,
+                color: Colors.red[600],
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Upcoming Exams',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_upcomingExams.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.school_outlined,
+                      size: 48,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No upcoming exams',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ..._upcomingExams.map((exam) {
+              final daysUntil = exam.date.difference(DateTime.now()).inDays;
+              final subject = _subjectService.getSubjectById(exam.subjectId);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: subject?.color ?? Colors.blue[400],
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            exam.name,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          if (subject != null)
+                            Text(
+                              subject.name,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '$daysUntil days',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red[600],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+        ],
+      ),
     );
   }
 

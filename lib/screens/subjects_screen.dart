@@ -48,8 +48,12 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
   void _showAddSubjectDialog() {
     final nameController = TextEditingController();
     final descriptionController = TextEditingController();
-    final hoursController = TextEditingController();
-    final minutesController = TextEditingController();
+    final dailyHoursController = TextEditingController();
+    final dailyMinutesController = TextEditingController();
+    final weeklyHoursController = TextEditingController();
+    final weeklyMinutesController = TextEditingController();
+    final monthlyHoursController = TextEditingController();
+    final monthlyMinutesController = TextEditingController();
     Color selectedColor = Colors.blue;
 
     showDialog(
@@ -59,6 +63,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextField(
                 controller: nameController,
@@ -77,11 +82,12 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
+              const Text('Daily Target', style: TextStyle(fontWeight: FontWeight.bold)),
               Row(
                 children: [
                   Expanded(
                     child: TextField(
-                      controller: hoursController,
+                      controller: dailyHoursController,
                       decoration: const InputDecoration(
                         labelText: 'Hours',
                         border: OutlineInputBorder(),
@@ -92,7 +98,61 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextField(
-                      controller: minutesController,
+                      controller: dailyMinutesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Minutes',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Weekly Target', style: TextStyle(fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: weeklyHoursController,
+                      decoration: const InputDecoration(
+                        labelText: 'Hours',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: weeklyMinutesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Minutes',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Monthly Target', style: TextStyle(fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: monthlyHoursController,
+                      decoration: const InputDecoration(
+                        labelText: 'Hours',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: monthlyMinutesController,
                       decoration: const InputDecoration(
                         labelText: 'Minutes',
                         border: OutlineInputBorder(),
@@ -126,9 +186,17 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 return;
               }
 
-              final hours = int.tryParse(hoursController.text) ?? 0;
-              final minutes = int.tryParse(minutesController.text) ?? 0;
-              final dailyTarget = Duration(hours: hours, minutes: minutes);
+              final dailyHours = int.tryParse(dailyHoursController.text) ?? 0;
+              final dailyMinutes = int.tryParse(dailyMinutesController.text) ?? 0;
+              final dailyTarget = Duration(hours: dailyHours, minutes: dailyMinutes);
+
+              final weeklyHours = int.tryParse(weeklyHoursController.text) ?? 0;
+              final weeklyMinutes = int.tryParse(weeklyMinutesController.text) ?? 0;
+              final weeklyTarget = Duration(hours: weeklyHours, minutes: weeklyMinutes);
+
+              final monthlyHours = int.tryParse(monthlyHoursController.text) ?? 0;
+              final monthlyMinutes = int.tryParse(monthlyMinutesController.text) ?? 0;
+              final monthlyTarget = Duration(hours: monthlyHours, minutes: monthlyMinutes);
 
               final success = await _subjectService.addSubject(
                 name: nameController.text.trim(),
@@ -136,6 +204,8 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                     ? null
                     : descriptionController.text.trim(),
                 dailyTarget: dailyTarget.inMinutes > 0 ? dailyTarget : null,
+                weeklyTarget: weeklyTarget.inMinutes > 0 ? weeklyTarget : null,
+                monthlyTarget: monthlyTarget.inMinutes > 0 ? monthlyTarget : null,
                 color: selectedColor,
               );
 
@@ -156,8 +226,12 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
   void _showEditSubjectDialog(Subject subject) {
     final nameController = TextEditingController(text: subject.name);
     final descriptionController = TextEditingController(text: subject.description ?? '');
-    final hoursController = TextEditingController(text: subject.dailyTarget?.inHours.toString() ?? '');
-    final minutesController = TextEditingController(text: ((subject.dailyTarget?.inMinutes ?? 0) % 60).toString());
+    final dailyHoursController = TextEditingController(text: subject.dailyTarget?.inHours.toString() ?? '');
+    final dailyMinutesController = TextEditingController(text: ((subject.dailyTarget?.inMinutes ?? 0) % 60).toString());
+    final weeklyHoursController = TextEditingController(text: subject.weeklyTarget?.inHours.toString() ?? '');
+    final weeklyMinutesController = TextEditingController(text: ((subject.weeklyTarget?.inMinutes ?? 0) % 60).toString());
+    final monthlyHoursController = TextEditingController(text: subject.monthlyTarget?.inHours.toString() ?? '');
+    final monthlyMinutesController = TextEditingController(text: ((subject.monthlyTarget?.inMinutes ?? 0) % 60).toString());
 
     showDialog(
       context: context,
@@ -166,6 +240,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextField(
                 controller: nameController,
@@ -184,11 +259,12 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
+              const Text('Daily Target', style: TextStyle(fontWeight: FontWeight.bold)),
               Row(
                 children: [
                   Expanded(
                     child: TextField(
-                      controller: hoursController,
+                      controller: dailyHoursController,
                       decoration: const InputDecoration(
                         labelText: 'Hours',
                         border: OutlineInputBorder(),
@@ -199,7 +275,61 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextField(
-                      controller: minutesController,
+                      controller: dailyMinutesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Minutes',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Weekly Target', style: TextStyle(fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: weeklyHoursController,
+                      decoration: const InputDecoration(
+                        labelText: 'Hours',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: weeklyMinutesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Minutes',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Monthly Target', style: TextStyle(fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: monthlyHoursController,
+                      decoration: const InputDecoration(
+                        labelText: 'Hours',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: monthlyMinutesController,
                       decoration: const InputDecoration(
                         labelText: 'Minutes',
                         border: OutlineInputBorder(),
@@ -224,9 +354,17 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                 return;
               }
 
-              final hours = int.tryParse(hoursController.text) ?? 0;
-              final minutes = int.tryParse(minutesController.text) ?? 0;
-              final dailyTarget = Duration(hours: hours, minutes: minutes);
+              final dailyHours = int.tryParse(dailyHoursController.text) ?? 0;
+              final dailyMinutes = int.tryParse(dailyMinutesController.text) ?? 0;
+              final dailyTarget = Duration(hours: dailyHours, minutes: dailyMinutes);
+
+              final weeklyHours = int.tryParse(weeklyHoursController.text) ?? 0;
+              final weeklyMinutes = int.tryParse(weeklyMinutesController.text) ?? 0;
+              final weeklyTarget = Duration(hours: weeklyHours, minutes: weeklyMinutes);
+
+              final monthlyHours = int.tryParse(monthlyHoursController.text) ?? 0;
+              final monthlyMinutes = int.tryParse(monthlyMinutesController.text) ?? 0;
+              final monthlyTarget = Duration(hours: monthlyHours, minutes: monthlyMinutes);
 
               final updatedSubject = subject.copyWith(
                 name: nameController.text.trim(),
@@ -234,6 +372,8 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                     ? null
                     : descriptionController.text.trim(),
                 dailyTarget: dailyTarget.inMinutes > 0 ? dailyTarget : null,
+                weeklyTarget: weeklyTarget.inMinutes > 0 ? weeklyTarget : null,
+                monthlyTarget: monthlyTarget.inMinutes > 0 ? monthlyTarget : null,
               );
 
               final success = await _subjectService.updateSubject(updatedSubject);

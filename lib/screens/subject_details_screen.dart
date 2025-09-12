@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
 import '../database/database_helper.dart';
+import '../models/exam.dart';
 import '../models/study_session.dart';
 import '../models/subject.dart';
 import '../models/topic.dart';
@@ -20,6 +22,7 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
   final SubjectService _subjectService = SubjectService();
   late Future<Map<String, dynamic>> _statsFuture;
   late Future<List<Topic>> _topicsFuture;
+  late Future<List<Exam>> _examsFuture;
   late Subject _subject;
   final dbHelper = DatabaseHelper();
 
@@ -33,6 +36,7 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
   void _loadData() {
     _statsFuture = _loadStats();
     _topicsFuture = _loadTopics();
+    _examsFuture = _loadExams();
   }
 
   Future<Map<String, dynamic>> _loadStats() async {
@@ -52,10 +56,20 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
     return await dbHelper.getTopicsForSubject(_subject.id!);
   }
 
+  Future<List<Exam>> _loadExams() async {
+    return await dbHelper.getExamsForSubject(_subject.id!);
+  }
+
   void _showEditDialog() {
     final nameController = TextEditingController(text: _subject.name);
     final descriptionController =
         TextEditingController(text: _subject.description);
+    final dailyHoursController = TextEditingController(text: _subject.dailyTarget?.inHours.toString() ?? '');
+    final dailyMinutesController = TextEditingController(text: (_subject.dailyTarget?.inMinutes.remainder(60)).toString());
+    final weeklyHoursController = TextEditingController(text: _subject.weeklyTarget?.inHours.toString() ?? '');
+    final weeklyMinutesController = TextEditingController(text: (_subject.weeklyTarget?.inMinutes.remainder(60)).toString());
+    final monthlyHoursController = TextEditingController(text: _subject.monthlyTarget?.inHours.toString() ?? '');
+    final monthlyMinutesController = TextEditingController(text: (_subject.monthlyTarget?.inMinutes.remainder(60)).toString());
     Color selectedColor = _subject.color;
 
     showDialog(
@@ -66,6 +80,7 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextField(
                   controller: nameController,
@@ -74,6 +89,69 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
                 TextField(
                   controller: descriptionController,
                   decoration: const InputDecoration(labelText: 'Description'),
+                ),
+                const SizedBox(height: 16),
+                const Text('Daily Target', style: TextStyle(fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: dailyHoursController,
+                        decoration: const InputDecoration(labelText: 'Hours'),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: dailyMinutesController,
+                        decoration: const InputDecoration(labelText: 'Minutes'),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text('Weekly Target', style: TextStyle(fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: weeklyHoursController,
+                        decoration: const InputDecoration(labelText: 'Hours'),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: weeklyMinutesController,
+                        decoration: const InputDecoration(labelText: 'Minutes'),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text('Monthly Target', style: TextStyle(fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: monthlyHoursController,
+                        decoration: const InputDecoration(labelText: 'Hours'),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: monthlyMinutesController,
+                        decoration: const InputDecoration(labelText: 'Minutes'),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 const Text('Subject Color'),
@@ -94,9 +172,19 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
             ),
             TextButton(
               onPressed: () async {
+                final dailyHours = int.tryParse(dailyHoursController.text) ?? 0;
+                final dailyMinutes = int.tryParse(dailyMinutesController.text) ?? 0;
+                final weeklyHours = int.tryParse(weeklyHoursController.text) ?? 0;
+                final weeklyMinutes = int.tryParse(weeklyMinutesController.text) ?? 0;
+                final monthlyHours = int.tryParse(monthlyHoursController.text) ?? 0;
+                final monthlyMinutes = int.tryParse(monthlyMinutesController.text) ?? 0;
+
                 final updatedSubject = _subject.copyWith(
                   name: nameController.text,
                   description: descriptionController.text,
+                  dailyTarget: Duration(hours: dailyHours, minutes: dailyMinutes),
+                  weeklyTarget: Duration(hours: weeklyHours, minutes: weeklyMinutes),
+                  monthlyTarget: Duration(hours: monthlyHours, minutes: monthlyMinutes),
                   color: selectedColor,
                 );
                 await _subjectService.updateSubject(updatedSubject);
@@ -145,6 +233,8 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
                       _buildDescriptionCard(),
                       const SizedBox(height: 16),
                     ],
+                    _buildExamsCard(),
+                    const SizedBox(height: 16),
                     _buildTopicsCard(),
                     const SizedBox(height: 16),
                     _buildSessionsCard(sessions),
@@ -155,11 +245,23 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddTopicDialog,
+      floatingActionButton: SpeedDial(
+        icon: Icons.add,
+        activeIcon: Icons.close,
         backgroundColor: _subject.color,
         foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.note_add),
+            label: 'Add Topic',
+            onTap: _showAddTopicDialog,
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.event),
+            label: 'Add Exam',
+            onTap: () => _showAddOrEditExamDialog(),
+          ),
+        ],
       ),
     );
   }
@@ -200,14 +302,28 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+        child: Column(
           children: [
-            _buildStatItem(Icons.access_time, 'Total Time', '${totalTime}m'),
-            _buildStatItem(
-                Icons.timelapse, 'Avg Session', '${avgDuration.toStringAsFixed(1)}m'),
-            _buildStatItem(
-                Icons.flag, 'Target', _formatDuration(_subject.dailyTarget)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatItem(Icons.access_time, 'Total Time', '${totalTime}m'),
+                _buildStatItem(
+                    Icons.timelapse, 'Avg Session', '${avgDuration.toStringAsFixed(1)}m'),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatItem(
+                    Icons.flag, 'Daily Target', _formatDuration(_subject.dailyTarget)),
+                _buildStatItem(
+                    Icons.flag, 'Weekly Target', _formatDuration(_subject.weeklyTarget)),
+                _buildStatItem(
+                    Icons.flag, 'Monthly Target', _formatDuration(_subject.monthlyTarget)),
+              ],
+            ),
           ],
         ),
       ),
@@ -250,6 +366,78 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
             Text(
               _subject.description!,
               style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExamsCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Exams',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            FutureBuilder<List<Exam>>(
+              future: _examsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24.0),
+                      child: Text('No exams yet. Add one!'),
+                    ),
+                  );
+                }
+
+                final exams = snapshot.data!;
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: exams.length,
+                  itemBuilder: (context, index) {
+                    final exam = exams[index];
+                    final daysUntil = exam.date.difference(DateTime.now()).inDays;
+                    return ListTile(
+                      leading: const Icon(Icons.event_note),
+                      title: Text(exam.name),
+                      subtitle: Text(DateFormat.yMMMd().format(exam.date)),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('$daysUntil days'),
+                          IconButton(
+                            icon: const Icon(Icons.edit, size: 20),
+                            onPressed: () => _showAddOrEditExamDialog(exam: exam),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, size: 20),
+                            onPressed: () async {
+                              await dbHelper.deleteExam(exam.id!);
+                              setState(() {
+                                _examsFuture = _loadExams();
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ],
         ),
@@ -399,6 +587,86 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
     } else {
       return '${minutes}m';
     }
+  }
+
+  void _showAddOrEditExamDialog({Exam? exam}) {
+    final nameController = TextEditingController(text: exam?.name ?? '');
+    DateTime? selectedDate = exam?.date;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(exam == null ? 'Add Exam' : 'Edit Exam'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Exam Name'),
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () async {
+                      final pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate ?? DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                      );
+                      if (pickedDate != null) {
+                        setState(() {
+                          selectedDate = pickedDate;
+                        });
+                      }
+                    },
+                    child: Text(
+                      selectedDate == null
+                          ? 'Select Exam Date'
+                          : 'Date: ${DateFormat.yMd().format(selectedDate!)}',
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (nameController.text.isNotEmpty && selectedDate != null) {
+                  if (exam == null) {
+                    final newExam = Exam(
+                      subjectId: _subject.id!,
+                      name: nameController.text,
+                      date: selectedDate!,
+                    );
+                    await dbHelper.insertExam(newExam);
+                  } else {
+                    final updatedExam = exam.copyWith(
+                      name: nameController.text,
+                      date: selectedDate,
+                    );
+                    await dbHelper.updateExam(updatedExam);
+                  }
+                  setState(() {
+                    _examsFuture = _loadExams();
+                  });
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showAddTopicDialog() {
