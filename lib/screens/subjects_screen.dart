@@ -56,170 +56,206 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     final monthlyMinutesController = TextEditingController();
     Color selectedColor = Colors.blue;
 
+    void calculateTargets() {
+      final dailyHours = int.tryParse(dailyHoursController.text) ?? 0;
+      final dailyMinutes = int.tryParse(dailyMinutesController.text) ?? 0;
+      final totalDailyMinutes = dailyHours * 60 + dailyMinutes;
+
+      if (totalDailyMinutes > 0) {
+        final weeklyMinutes = totalDailyMinutes * 7;
+        final monthlyMinutes = totalDailyMinutes * 30;
+
+        weeklyHoursController.text = (weeklyMinutes ~/ 60).toString();
+        weeklyMinutesController.text = (weeklyMinutes % 60).toString();
+        monthlyHoursController.text = (monthlyMinutes ~/ 60).toString();
+        monthlyMinutesController.text = (monthlyMinutes % 60).toString();
+      } else {
+        weeklyHoursController.clear();
+        weeklyMinutesController.clear();
+        monthlyHoursController.clear();
+        monthlyMinutesController.clear();
+      }
+    }
+
+    dailyHoursController.addListener(calculateTargets);
+    dailyMinutesController.addListener(calculateTargets);
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add New Subject'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Subject Name *',
-                  border: OutlineInputBorder(),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add New Subject'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Subject Name *',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: descriptionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Description (Optional)',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Daily Target', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: dailyHoursController,
+                            decoration: const InputDecoration(
+                              labelText: 'Hours',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: dailyMinutesController,
+                            decoration: const InputDecoration(
+                              labelText: 'Minutes',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Weekly Target', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: weeklyHoursController,
+                            decoration: const InputDecoration(
+                              labelText: 'Hours',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: weeklyMinutesController,
+                            decoration: const InputDecoration(
+                              labelText: 'Minutes',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Monthly Target', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: monthlyHoursController,
+                            decoration: const InputDecoration(
+                              labelText: 'Hours',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: monthlyMinutesController,
+                            decoration: const InputDecoration(
+                              labelText: 'Minutes',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Subject Color'),
+                    const SizedBox(height: 10),
+                    BlockPicker(
+                      pickerColor: selectedColor,
+                      onColorChanged: (color) {
+                        selectedColor = color;
+                      },
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (Optional)',
-                  border: OutlineInputBorder(),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    dailyHoursController.removeListener(calculateTargets);
+                    dailyMinutesController.removeListener(calculateTargets);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Cancel'),
                 ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-              const Text('Daily Target', style: TextStyle(fontWeight: FontWeight.bold)),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: dailyHoursController,
-                      decoration: const InputDecoration(
-                        labelText: 'Hours',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: dailyMinutesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Minutes',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text('Weekly Target', style: TextStyle(fontWeight: FontWeight.bold)),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: weeklyHoursController,
-                      decoration: const InputDecoration(
-                        labelText: 'Hours',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: weeklyMinutesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Minutes',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text('Monthly Target', style: TextStyle(fontWeight: FontWeight.bold)),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: monthlyHoursController,
-                      decoration: const InputDecoration(
-                        labelText: 'Hours',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: monthlyMinutesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Minutes',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const Text('Subject Color'),
-              const SizedBox(height: 10),
-              BlockPicker(
-                pickerColor: selectedColor,
-                onColorChanged: (color) {
-                  selectedColor = color;
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.trim().isEmpty) {
-                _showSnackBar('Please fill in all required fields', Colors.red);
-                return;
-              }
+                ElevatedButton(
+                  onPressed: () async {
+                    if (nameController.text.trim().isEmpty) {
+                      _showSnackBar('Please fill in all required fields', Colors.red);
+                      return;
+                    }
 
-              final dailyHours = int.tryParse(dailyHoursController.text) ?? 0;
-              final dailyMinutes = int.tryParse(dailyMinutesController.text) ?? 0;
-              final dailyTarget = Duration(hours: dailyHours, minutes: dailyMinutes);
+                    final dailyHours = int.tryParse(dailyHoursController.text) ?? 0;
+                    final dailyMinutes = int.tryParse(dailyMinutesController.text) ?? 0;
+                    final dailyTarget = Duration(hours: dailyHours, minutes: dailyMinutes);
 
-              final weeklyHours = int.tryParse(weeklyHoursController.text) ?? 0;
-              final weeklyMinutes = int.tryParse(weeklyMinutesController.text) ?? 0;
-              final weeklyTarget = Duration(hours: weeklyHours, minutes: weeklyMinutes);
+                    final weeklyHours = int.tryParse(weeklyHoursController.text) ?? 0;
+                    final weeklyMinutes = int.tryParse(weeklyMinutesController.text) ?? 0;
+                    final weeklyTarget = Duration(hours: weeklyHours, minutes: weeklyMinutes);
 
-              final monthlyHours = int.tryParse(monthlyHoursController.text) ?? 0;
-              final monthlyMinutes = int.tryParse(monthlyMinutesController.text) ?? 0;
-              final monthlyTarget = Duration(hours: monthlyHours, minutes: monthlyMinutes);
+                    final monthlyHours = int.tryParse(monthlyHoursController.text) ?? 0;
+                    final monthlyMinutes = int.tryParse(monthlyMinutesController.text) ?? 0;
+                    final monthlyTarget = Duration(hours: monthlyHours, minutes: monthlyMinutes);
 
-              final success = await _subjectService.addSubject(
-                name: nameController.text.trim(),
-                description: descriptionController.text.trim().isEmpty
-                    ? null
-                    : descriptionController.text.trim(),
-                dailyTarget: dailyTarget.inMinutes > 0 ? dailyTarget : null,
-                weeklyTarget: weeklyTarget.inMinutes > 0 ? weeklyTarget : null,
-                monthlyTarget: monthlyTarget.inMinutes > 0 ? monthlyTarget : null,
-                color: selectedColor,
-              );
+                    final success = await _subjectService.addSubject(
+                      name: nameController.text.trim(),
+                      description: descriptionController.text.trim().isEmpty
+                          ? null
+                          : descriptionController.text.trim(),
+                      dailyTarget: dailyTarget.inMinutes > 0 ? dailyTarget : null,
+                      weeklyTarget: weeklyTarget.inMinutes > 0 ? weeklyTarget : null,
+                      monthlyTarget: monthlyTarget.inMinutes > 0 ? monthlyTarget : null,
+                      color: selectedColor,
+                    );
 
-              if (success) {
-                Navigator.pop(context);
-                _showSnackBar('Subject added successfully!', Colors.green);
-              } else {
-                _showSnackBar('Subject with this name already exists', Colors.red);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
+                    if (success) {
+                      dailyHoursController.removeListener(calculateTargets);
+                      dailyMinutesController.removeListener(calculateTargets);
+                      Navigator.pop(context);
+                      _showSnackBar('Subject added successfully!', Colors.green);
+                    } else {
+                      _showSnackBar('Subject with this name already exists', Colors.red);
+                    }
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -233,162 +269,198 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
     final monthlyHoursController = TextEditingController(text: subject.monthlyTarget?.inHours.toString() ?? '');
     final monthlyMinutesController = TextEditingController(text: ((subject.monthlyTarget?.inMinutes ?? 0) % 60).toString());
 
+    void calculateTargets() {
+      final dailyHours = int.tryParse(dailyHoursController.text) ?? 0;
+      final dailyMinutes = int.tryParse(dailyMinutesController.text) ?? 0;
+      final totalDailyMinutes = dailyHours * 60 + dailyMinutes;
+
+      if (totalDailyMinutes > 0) {
+        final weeklyMinutes = totalDailyMinutes * 7;
+        final monthlyMinutes = totalDailyMinutes * 30;
+
+        weeklyHoursController.text = (weeklyMinutes ~/ 60).toString();
+        weeklyMinutesController.text = (weeklyMinutes % 60).toString();
+        monthlyHoursController.text = (monthlyMinutes ~/ 60).toString();
+        monthlyMinutesController.text = (monthlyMinutes % 60).toString();
+      } else {
+        weeklyHoursController.clear();
+        weeklyMinutesController.clear();
+        monthlyHoursController.clear();
+        monthlyMinutesController.clear();
+      }
+    }
+
+    dailyHoursController.addListener(calculateTargets);
+    dailyMinutesController.addListener(calculateTargets);
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Subject'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Subject Name *',
-                  border: OutlineInputBorder(),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Edit Subject'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Subject Name *',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: descriptionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Description (Optional)',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Daily Target', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: dailyHoursController,
+                            decoration: const InputDecoration(
+                              labelText: 'Hours',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: dailyMinutesController,
+                            decoration: const InputDecoration(
+                              labelText: 'Minutes',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Weekly Target', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: weeklyHoursController,
+                            decoration: const InputDecoration(
+                              labelText: 'Hours',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: weeklyMinutesController,
+                            decoration: const InputDecoration(
+                              labelText: 'Minutes',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Monthly Target', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: monthlyHoursController,
+                            decoration: const InputDecoration(
+                              labelText: 'Hours',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: monthlyMinutesController,
+                            decoration: const InputDecoration(
+                              labelText: 'Minutes',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description (Optional)',
-                  border: OutlineInputBorder(),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    dailyHoursController.removeListener(calculateTargets);
+                    dailyMinutesController.removeListener(calculateTargets);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Cancel'),
                 ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-              const Text('Daily Target', style: TextStyle(fontWeight: FontWeight.bold)),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: dailyHoursController,
-                      decoration: const InputDecoration(
-                        labelText: 'Hours',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: dailyMinutesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Minutes',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text('Weekly Target', style: TextStyle(fontWeight: FontWeight.bold)),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: weeklyHoursController,
-                      decoration: const InputDecoration(
-                        labelText: 'Hours',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: weeklyMinutesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Minutes',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text('Monthly Target', style: TextStyle(fontWeight: FontWeight.bold)),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: monthlyHoursController,
-                      decoration: const InputDecoration(
-                        labelText: 'Hours',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: monthlyMinutesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Minutes',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.trim().isEmpty) {
-                _showSnackBar('Please fill in all required fields', Colors.red);
-                return;
-              }
+                ElevatedButton(
+                  onPressed: () async {
+                    if (nameController.text.trim().isEmpty) {
+                      _showSnackBar('Please fill in all required fields', Colors.red);
+                      return;
+                    }
 
-              final dailyHours = int.tryParse(dailyHoursController.text) ?? 0;
-              final dailyMinutes = int.tryParse(dailyMinutesController.text) ?? 0;
-              final dailyTarget = Duration(hours: dailyHours, minutes: dailyMinutes);
+                    final dailyHours = int.tryParse(dailyHoursController.text) ?? 0;
+                    final dailyMinutes = int.tryParse(dailyMinutesController.text) ?? 0;
+                    final dailyTarget = Duration(hours: dailyHours, minutes: dailyMinutes);
 
-              final weeklyHours = int.tryParse(weeklyHoursController.text) ?? 0;
-              final weeklyMinutes = int.tryParse(weeklyMinutesController.text) ?? 0;
-              final weeklyTarget = Duration(hours: weeklyHours, minutes: weeklyMinutes);
+                    final weeklyHours = int.tryParse(weeklyHoursController.text) ?? 0;
+                    final weeklyMinutes = int.tryParse(weeklyMinutesController.text) ?? 0;
+                    final weeklyTarget = Duration(hours: weeklyHours, minutes: weeklyMinutes);
 
-              final monthlyHours = int.tryParse(monthlyHoursController.text) ?? 0;
-              final monthlyMinutes = int.tryParse(monthlyMinutesController.text) ?? 0;
-              final monthlyTarget = Duration(hours: monthlyHours, minutes: monthlyMinutes);
+                    final monthlyHours = int.tryParse(monthlyHoursController.text) ?? 0;
+                    final monthlyMinutes = int.tryParse(monthlyMinutesController.text) ?? 0;
+                    final monthlyTarget = Duration(hours: monthlyHours, minutes: monthlyMinutes);
 
-              final updatedSubject = subject.copyWith(
-                name: nameController.text.trim(),
-                description: descriptionController.text.trim().isEmpty
-                    ? null
-                    : descriptionController.text.trim(),
-                dailyTarget: dailyTarget.inMinutes > 0 ? dailyTarget : null,
-                weeklyTarget: weeklyTarget.inMinutes > 0 ? weeklyTarget : null,
-                monthlyTarget: monthlyTarget.inMinutes > 0 ? monthlyTarget : null,
-              );
+                    final updatedSubject = subject.copyWith(
+                      name: nameController.text.trim(),
+                      description: descriptionController.text.trim().isEmpty
+                          ? null
+                          : descriptionController.text.trim(),
+                      dailyTarget: dailyTarget.inMinutes > 0 ? dailyTarget : null,
+                      weeklyTarget: weeklyTarget.inMinutes > 0 ? weeklyTarget : null,
+                      monthlyTarget: monthlyTarget.inMinutes > 0 ? monthlyTarget : null,
+                    );
 
-              final success = await _subjectService.updateSubject(updatedSubject);
+                    final success = await _subjectService.updateSubject(updatedSubject);
 
-              if (success) {
-                Navigator.pop(context);
-                _showSnackBar('Subject updated successfully!', Colors.green);
-              } else {
-                _showSnackBar('Failed to update subject', Colors.red);
-              }
-            },
-            child: const Text('Update'),
-          ),
-        ],
-      ),
+                    if (success) {
+                      dailyHoursController.removeListener(calculateTargets);
+                      dailyMinutesController.removeListener(calculateTargets);
+                      Navigator.pop(context);
+                      _showSnackBar('Subject updated successfully!', Colors.green);
+                    } else {
+                      _showSnackBar('Failed to update subject', Colors.red);
+                    }
+                  },
+                  child: const Text('Update'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
