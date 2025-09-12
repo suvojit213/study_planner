@@ -72,7 +72,12 @@ class TimerService extends ChangeNotifier {
     _elapsedSeconds = 0;
     _state = TimerState.running;
 
-    FlutterBackgroundService().invoke('start', {'subject': subject.toMap()});
+    final service = FlutterBackgroundService();
+    bool isRunning = await service.isRunning();
+    if (!isRunning) {
+      await service.startService();
+    }
+    service.invoke('start', {'subject': subject.toMap()});
     notifyListeners();
     return true;
   }
