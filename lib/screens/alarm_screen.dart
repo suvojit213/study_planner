@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:lottie/lottie.dart';
 import 'package:study_planner/screens/home_screen.dart';
+import 'package:study_planner/services/timer_service.dart';
 import '../database/database_helper.dart';
 import '../models/study_session.dart';
 import '../models/subject.dart';
@@ -39,6 +40,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
   Future<void> _stopAndSave() async {
     FlutterRingtonePlayer().stop();
+    TimerService().resetCompletionStatus();
 
     final notes = await _showAddNoteDialog();
 

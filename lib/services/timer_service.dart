@@ -141,5 +141,9 @@ class TimerService extends ChangeNotifier {
   Future<Map<String, int>> getTodayProgress() async {
     return await _dbHelper.getTodayStudyTime();
   }
+
+  void resetCompletionStatus() {
+    isTargetCompleted.value = false;
+  }
 }
 
