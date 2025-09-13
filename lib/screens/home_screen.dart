@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../database/database_helper.dart';
 import '../models/exam.dart';
+import '../models/subject.dart';
 import '../services/timer_service.dart';
 import '../services/subject_service.dart';
-import '../models/subject.dart';
-import './schedule_screen.dart'; // Import the new screen
+import './schedule_screen.dart';
+
+class _ExamDetail {
+  final Exam exam;
+  final Subject? subject;
+
+  _ExamDetail({required this.exam, this.subject});
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, int> _todayProgress = {};
   Map<String, int> _monthlyProgress = {};
   int _todayTotal = 0;
-  List<Exam> _upcomingExams = [];
+  List<_ExamDetail> _upcomingExams = [];
 
   @override
   void initState() {
@@ -48,17 +56,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadData() async {
+    await _subjectService.loadSubjects();
     final progress = await _timerService.getTodayProgress();
     final total = await _timerService.getTodayTotalMinutes();
     final exams = await _dbHelper.getAllExams();
     exams.sort((a, b) => a.date.compareTo(b.date));
     final monthlyProgress = await _dbHelper.getMonthlyStudyTime();
 
+    final examDetails = exams.map((exam) {
+      return _ExamDetail(
+        exam: exam,
+        subject: _subjectService.getSubjectById(exam.subjectId),
+      );
+    }).toList();
+
     if (mounted) {
       setState(() {
         _todayProgress = progress;
         _todayTotal = total;
-        _upcomingExams = exams;
+        _upcomingExams = examDetails;
         _monthlyProgress = monthlyProgress;
       });
     }
@@ -265,56 +281,92 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             )
           else
-            ..._upcomingExams.map((exam) {
-              final daysUntil = exam.date.difference(DateTime.now()).inDays;
-              final subject = _subjectService.getSubjectById(exam.subjectId);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: subject?.color ?? Colors.blue[400],
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            exam.name,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[700],
-                            ),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _upcomingExams.length,
+              itemBuilder: (context, index) {
+                final examDetail = _upcomingExams[index];
+                final exam = examDetail.exam;
+                final subject = examDetail.subject;
+                final daysUntil = exam.date.difference(DateTime.now()).inDays;
+
+                return Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: subject?.color ?? Colors.blue[400],
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                          if (subject != null)
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                exam.name,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[800],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                subject?.name ?? 'No Subject',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                DateFormat.yMMMd().format(exam.date),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
                             Text(
-                              subject.name,
+                              '$daysUntil',
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[500],
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red[600],
                               ),
                             ),
-                        ],
-                      ),
+                            Text(
+                              'days left',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    Text(
-                      '$daysUntil days',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.red[600],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
@@ -346,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Today\'s Progress',
+                "Today's Progress",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -475,7 +527,7 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           else
             ..._monthlyProgress.entries.map((entry) {
-              final subject = _subjectService.subjects.firstWhere((s) => s.name == entry.key);
+              final subject = _subjectService.subjects.firstWhere((s) => s.name == entry.key, orElse: () => Subject(name: '', createdAt: DateTime.now(), color: Colors.grey));
               final monthlyTarget = subject.monthlyTarget?.inMinutes ?? 0;
               final progress = monthlyTarget > 0 ? (entry.value / monthlyTarget).clamp(0.0, 1.0) : 0.0;
               return Padding(
@@ -544,7 +596,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Today\'s Subject Progress',
+                "Today's Subject Progress",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -595,6 +647,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSubjectProgressItem(String subjectName, int minutes) {
+    final subject = _subjectService.subjects.firstWhere((s) => s.name == subjectName, orElse: () => Subject(name: '', createdAt: DateTime.now(), color: Colors.grey));
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -603,7 +656,7 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: Colors.blue[400],
+              color: subject.color,
               shape: BoxShape.circle,
             ),
           ),
@@ -630,4 +683,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
