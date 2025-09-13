@@ -65,6 +65,47 @@ void onStart(ServiceInstance service) async {
     await _prefs!.remove('timer_elapsed');
   }
 
+  void _handleTimer(Timer timer, ServiceInstance service, FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
+    _elapsedSeconds++;
+    service.invoke('update', {'elapsedSeconds': _elapsedSeconds});
+    await _saveState('running');
+
+    if (_currentSubject != null &&
+        _currentSubject!.dailyTarget != null &&
+        _currentSubject!.dailyTarget!.inSeconds > 0 &&
+        _elapsedSeconds >= _currentSubject!.dailyTarget!.inSeconds) {
+      
+      final updatedSession = _currentSession!.copyWith(
+        endTime: DateTime.now(),
+        durationMinutes: _elapsedSeconds ~/ 60,
+        isCompleted: true,
+      );
+      await _dbHelper.updateStudySession(updatedSession);
+      
+      _showCompletionNotification(flutterLocalNotificationsPlugin, _currentSubject!.name, _settingsService);
+
+      service.invoke('completed', {'subject': _currentSubject!.toMap(), 'duration': _elapsedSeconds});
+      
+      _timer?.cancel();
+      _currentSubject = null;
+      _currentSession = null;
+      _elapsedSeconds = 0;
+      await _clearState();
+    }
+
+    if (_elapsedSeconds % 60 == 0 && _currentSession != null) {
+      final updatedSession = _currentSession!.copyWith(
+        durationMinutes: _elapsedSeconds ~/ 60,
+      );
+      await _dbHelper.updateStudySession(updatedSession);
+    }
+  }
+
+  void _startTimer(ServiceInstance service, FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) => _handleTimer(timer, service, flutterLocalNotificationsPlugin));
+  }
+
   service.on('start').listen((event) async {
     _currentSubject = Subject.fromMap(event!['subject']);
     _elapsedSeconds = 0;
@@ -79,43 +120,7 @@ void onStart(ServiceInstance service) async {
     final sessionId = await _dbHelper.insertStudySession(_currentSession!);
     _currentSession = _currentSession!.copyWith(id: sessionId);
 
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      _elapsedSeconds++;
-      service.invoke('update', {'elapsedSeconds': _elapsedSeconds});
-      await _saveState('running');
-
-      if (_currentSubject != null &&
-          _currentSubject!.dailyTarget != null &&
-          _currentSubject!.dailyTarget!.inSeconds > 0 &&
-          _elapsedSeconds >= _currentSubject!.dailyTarget!.inSeconds) {
-        
-        final updatedSession = _currentSession!.copyWith(
-          endTime: DateTime.now(),
-          durationMinutes: _elapsedSeconds ~/ 60,
-          isCompleted: true,
-        );
-        await _dbHelper.updateStudySession(updatedSession);
-        
-        _showCompletionNotification(flutterLocalNotificationsPlugin, _currentSubject!.name, _settingsService);
-        FlutterRingtonePlayer().playAlarm();
-
-        service.invoke('completed', {'subject': _currentSubject!.toMap(), 'duration': _elapsedSeconds});
-        
-        _timer?.cancel();
-        _currentSubject = null;
-        _currentSession = null;
-        _elapsedSeconds = 0;
-        await _clearState();
-      }
-
-      if (_elapsedSeconds % 60 == 0 && _currentSession != null) {
-        final updatedSession = _currentSession!.copyWith(
-          durationMinutes: _elapsedSeconds ~/ 60,
-        );
-        await _dbHelper.updateStudySession(updatedSession);
-      }
-    });
+    _startTimer(service, flutterLocalNotificationsPlugin);
   });
 
   service.on('pause').listen((event) async {
@@ -124,43 +129,7 @@ void onStart(ServiceInstance service) async {
   });
 
   service.on('resume').listen((event) {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      _elapsedSeconds++;
-      service.invoke('update', {'elapsedSeconds': _elapsedSeconds});
-      await _saveState('running');
-
-      if (_currentSubject != null &&
-          _currentSubject!.dailyTarget != null &&
-          _currentSubject!.dailyTarget!.inSeconds > 0 &&
-          _elapsedSeconds >= _currentSubject!.dailyTarget!.inSeconds) {
-        
-        final updatedSession = _currentSession!.copyWith(
-          endTime: DateTime.now(),
-          durationMinutes: _elapsedSeconds ~/ 60,
-          isCompleted: true,
-        );
-        await _dbHelper.updateStudySession(updatedSession);
-
-        _showCompletionNotification(flutterLocalNotificationsPlugin, _currentSubject!.name, _settingsService);
-        FlutterRingtonePlayer().playAlarm();
-        
-        service.invoke('completed', {'subject': _currentSubject!.toMap(), 'duration': _elapsedSeconds});
-
-        _timer?.cancel();
-        _currentSubject = null;
-        _currentSession = null;
-        _elapsedSeconds = 0;
-        await _clearState();
-      }
-      
-      if (_elapsedSeconds % 60 == 0 && _currentSession != null) {
-        final updatedSession = _currentSession!.copyWith(
-          durationMinutes: _elapsedSeconds ~/ 60,
-        );
-        await _dbHelper.updateStudySession(updatedSession);
-      }
-    });
+    _startTimer(service, flutterLocalNotificationsPlugin);
   });
 
   service.on('stop').listen((event) async {
