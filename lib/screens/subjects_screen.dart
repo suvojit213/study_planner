@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../services/subject_service.dart';
 import '../models/subject.dart';
 import './subject_details_screen.dart';
@@ -47,14 +46,12 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
 
   void _showAddSubjectDialog() {
     final nameController = TextEditingController();
-    final descriptionController = TextEditingController();
     final dailyHoursController = TextEditingController();
     final dailyMinutesController = TextEditingController();
     final weeklyHoursController = TextEditingController();
     final weeklyMinutesController = TextEditingController();
     final monthlyHoursController = TextEditingController();
     final monthlyMinutesController = TextEditingController();
-    Color selectedColor = Colors.blue;
 
     void calculateTargets() {
       final dailyHours = int.tryParse(dailyHoursController.text) ?? 0;
@@ -98,15 +95,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                         labelText: 'Subject Name *',
                         border: OutlineInputBorder(),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Description (Optional)',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 2,
                     ),
                     const SizedBox(height: 16),
                     const Text('Daily Target', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -189,15 +177,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    const Text('Subject Color'),
-                    const SizedBox(height: 10),
-                    BlockPicker(
-                      pickerColor: selectedColor,
-                      onColorChanged: (color) {
-                        selectedColor = color;
-                      },
-                    ),
                   ],
                 ),
               ),
@@ -231,13 +210,9 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
 
                     final success = await _subjectService.addSubject(
                       name: nameController.text.trim(),
-                      description: descriptionController.text.trim().isEmpty
-                          ? null
-                          : descriptionController.text.trim(),
                       dailyTarget: dailyTarget.inMinutes > 0 ? dailyTarget : null,
                       weeklyTarget: weeklyTarget.inMinutes > 0 ? weeklyTarget : null,
                       monthlyTarget: monthlyTarget.inMinutes > 0 ? monthlyTarget : null,
-                      color: selectedColor,
                     );
 
                     if (success) {
@@ -261,7 +236,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
 
   void _showEditSubjectDialog(Subject subject) {
     final nameController = TextEditingController(text: subject.name);
-    final descriptionController = TextEditingController(text: subject.description ?? '');
     final dailyHoursController = TextEditingController(text: subject.dailyTarget?.inHours.toString() ?? '');
     final dailyMinutesController = TextEditingController(text: ((subject.dailyTarget?.inMinutes ?? 0) % 60).toString());
     final weeklyHoursController = TextEditingController(text: subject.weeklyTarget?.inHours.toString() ?? '');
@@ -311,15 +285,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
                         labelText: 'Subject Name *',
                         border: OutlineInputBorder(),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Description (Optional)',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 2,
                     ),
                     const SizedBox(height: 16),
                     const Text('Daily Target', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -435,9 +400,6 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
 
                     final updatedSubject = subject.copyWith(
                       name: nameController.text.trim(),
-                      description: descriptionController.text.trim().isEmpty
-                          ? null
-                          : descriptionController.text.trim(),
                       dailyTarget: dailyTarget.inMinutes > 0 ? dailyTarget : null,
                       weeklyTarget: weeklyTarget.inMinutes > 0 ? weeklyTarget : null,
                       monthlyTarget: monthlyTarget.inMinutes > 0 ? monthlyTarget : null,
