@@ -22,7 +22,6 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
   final SubjectService _subjectService = SubjectService();
   late Future<Map<String, dynamic>> _statsFuture;
   late Future<List<Topic>> _topicsFuture;
-  late Future<List<Exam>> _examsFuture;
   late Subject _subject;
   final dbHelper = DatabaseHelper();
 
@@ -36,7 +35,6 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
   void _loadData() {
     _statsFuture = _loadStats();
     _topicsFuture = _loadTopics();
-    _examsFuture = _loadExams();
   }
 
   Future<Map<String, dynamic>> _loadStats() async {
@@ -56,9 +54,7 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
     return await dbHelper.getTopicsForSubject(_subject.id!);
   }
 
-  Future<List<Exam>> _loadExams() async {
-    return await dbHelper.getExamsForSubject(_subject.id!);
-  }
+  
 
   void _showEditDialog() {
     final nameController = TextEditingController(text: _subject.name);
@@ -233,8 +229,6 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
                       _buildDescriptionCard(),
                       const SizedBox(height: 16),
                     ],
-                    _buildExamsCard(),
-                    const SizedBox(height: 16),
                     _buildTopicsCard(),
                     const SizedBox(height: 16),
                     _buildSessionsCard(sessions),
@@ -255,11 +249,6 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
             child: const Icon(Icons.note_add),
             label: 'Add Topic',
             onTap: _showAddTopicDialog,
-          ),
-          SpeedDialChild(
-            child: const Icon(Icons.event),
-            label: 'Add Exam',
-            onTap: () => _showAddOrEditExamDialog(),
           ),
         ],
       ),
@@ -373,77 +362,7 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
     );
   }
 
-  Widget _buildExamsCard() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Exams',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            FutureBuilder<List<Exam>>(
-              future: _examsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24.0),
-                      child: Text('No exams yet. Add one!'),
-                    ),
-                  );
-                }
-
-                final exams = snapshot.data!;
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: exams.length,
-                  itemBuilder: (context, index) {
-                    final exam = exams[index];
-                    final daysUntil = exam.date.difference(DateTime.now()).inDays;
-                    return ListTile(
-                      leading: const Icon(Icons.event_note),
-                      title: Text(exam.name),
-                      subtitle: Text(DateFormat.yMMMd().format(exam.date)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('$daysUntil days'),
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 20),
-                            onPressed: () => _showAddOrEditExamDialog(exam: exam),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 20),
-                            onPressed: () async {
-                              await dbHelper.deleteExam(exam.id!);
-                              setState(() {
-                                _examsFuture = _loadExams();
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  
 
   Widget _buildTopicsCard() {
     return Card(
@@ -589,85 +508,7 @@ class _SubjectDetailsScreenState extends State<SubjectDetailsScreen> {
     }
   }
 
-  void _showAddOrEditExamDialog({Exam? exam}) {
-    final nameController = TextEditingController(text: exam?.name ?? '');
-    DateTime? selectedDate = exam?.date;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(exam == null ? 'Add Exam' : 'Edit Exam'),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Exam Name'),
-                    autofocus: true,
-                  ),
-                  const SizedBox(height: 20),
-                  TextButton(
-                    onPressed: () async {
-                      final pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: selectedDate ?? DateTime.now(),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-                      );
-                      if (pickedDate != null) {
-                        setState(() {
-                          selectedDate = pickedDate;
-                        });
-                      }
-                    },
-                    child: Text(
-                      selectedDate == null
-                          ? 'Select Exam Date'
-                          : 'Date: ${DateFormat.yMd().format(selectedDate!)}',
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (nameController.text.isNotEmpty && selectedDate != null) {
-                  if (exam == null) {
-                    final newExam = Exam(
-                      subjectId: _subject.id!,
-                      name: nameController.text,
-                      date: selectedDate!,
-                    );
-                    await dbHelper.insertExam(newExam);
-                  } else {
-                    final updatedExam = exam.copyWith(
-                      name: nameController.text,
-                      date: selectedDate,
-                    );
-                    await dbHelper.updateExam(updatedExam);
-                  }
-                  setState(() {
-                    _examsFuture = _loadExams();
-                  });
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  
 
   void _showAddTopicDialog() {
     final nameController = TextEditingController();
