@@ -30,7 +30,8 @@ Future<void> main() async {
     'study_timer_channel',
     'Study Timer',
     description: 'Notification for the study timer',
-    importance: Importance.low,
+    importance: Importance.default,
+    enableVibration: true,
   );
 
   await flutterLocalNotificationsPlugin
