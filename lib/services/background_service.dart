@@ -65,10 +65,35 @@ void onStart(ServiceInstance service) async {
     await _prefs!.remove('timer_elapsed');
   }
 
+  void _updateNotification(String text) {
+    flutterLocalNotificationsPlugin.show(
+      1,
+      'Study Timer',
+      text,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'study_timer_channel',
+          'Study Timer',
+          channelDescription: 'Notification for the study timer',
+          importance: Importance.low,
+          priority: Priority.low,
+          ongoing: true,
+          icon: '@mipmap/ic_launcher',
+        ),
+      ),
+    );
+  }
+
   void _handleTimer(Timer timer, ServiceInstance service, FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
     _elapsedSeconds++;
     service.invoke('update', {'elapsedSeconds': _elapsedSeconds});
     await _saveState('running');
+
+    final hours = _elapsedSeconds ~/ 3600;
+    final minutes = (_elapsedSeconds % 3600) ~/ 60;
+    final seconds = _elapsedSeconds % 60;
+    _updateNotification(
+        'Studying ${_currentSubject?.name}: ${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}');
 
     if (_currentSubject != null &&
         _currentSubject!.dailyTarget != null &&
@@ -91,6 +116,7 @@ void onStart(ServiceInstance service) async {
       _currentSession = null;
       _elapsedSeconds = 0;
       await _clearState();
+      flutterLocalNotificationsPlugin.cancel(1);
     }
 
     if (_elapsedSeconds % 60 == 0 && _currentSession != null) {
@@ -120,13 +146,17 @@ void onStart(ServiceInstance service) async {
     final sessionId = await _dbHelper.insertStudySession(_currentSession!);
     _currentSession = _currentSession!.copyWith(id: sessionId);
 
+    _updateNotification('Starting timer for ${_currentSubject?.name}');
     _startTimer(service, flutterLocalNotificationsPlugin);
   });
 
   service.on('pause').listen((event) async {
     _timer?.cancel();
     await _saveState('paused');
+    _updateNotification('Timer paused for ${_currentSubject?.name}');
   });
+
+
 
   service.on('resume').listen((event) {
     _startTimer(service, flutterLocalNotificationsPlugin);
@@ -146,6 +176,7 @@ void onStart(ServiceInstance service) async {
     _currentSession = null;
     _elapsedSeconds = 0;
     await _clearState();
+    flutterLocalNotificationsPlugin.cancel(1);
   });
 }
 

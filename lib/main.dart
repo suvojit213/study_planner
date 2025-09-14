@@ -19,11 +19,24 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeService();
+
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
   const InitializationSettings initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  final AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'study_timer_channel',
+    'Study Timer',
+    description: 'Notification for the study timer',
+    importance: Importance.low,
+  );
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
 
   if (Platform.isAndroid) {
     var status = await Permission.notification.status;
