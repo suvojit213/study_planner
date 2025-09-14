@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'services/theme_service.dart';
 import 'dart:io';
 
@@ -25,14 +26,15 @@ Future<void> main() async {
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
   if (Platform.isAndroid) {
-    flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
-    flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestFullScreenIntentPermission();
+    var status = await Permission.notification.status;
+    if (status.isDenied) {
+      await Permission.notification.request();
+    }
+
+    var fullScreenStatus = await Permission.systemAlertWindow.status;
+    if (fullScreenStatus.isDenied) {
+      await Permission.systemAlertWindow.request();
+    }
   }
 
   runApp(
