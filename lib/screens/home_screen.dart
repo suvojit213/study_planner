@@ -7,6 +7,7 @@ import '../services/timer_service.dart';
 import '../services/subject_service.dart';
 import './schedule_screen.dart';
 import './exam_details_screen.dart';
+import './add_exam_screen.dart';
 
 class _ExamDetail {
   final Exam exam;
@@ -146,6 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+      
     );
   }
 
@@ -240,20 +242,37 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                Icons.event_note,
-                color: Colors.red[600],
-                size: 24,
+              Row(
+                children: [
+                  Icon(
+                    Icons.event_note,
+                    color: Colors.red[600],
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Upcoming Exams',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Text(
-                'Upcoming Exams',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
-                ),
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AddExamScreen()),
+                  );
+                  if (result != null) {
+                    _loadData();
+                  }
+                },
               ),
             ],
           ),

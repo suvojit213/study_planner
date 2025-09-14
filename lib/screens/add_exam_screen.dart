@@ -6,7 +6,9 @@ import '../models/subject.dart';
 import '../services/subject_service.dart';
 
 class AddExamScreen extends StatefulWidget {
-  const AddExamScreen({super.key});
+  final Exam? exam;
+
+  const AddExamScreen({super.key, this.exam});
 
   @override
   State<AddExamScreen> createState() => _AddExamScreenState();
@@ -17,13 +19,18 @@ class _AddExamScreenState extends State<AddExamScreen> {
   final dbHelper = DatabaseHelper();
   List<Subject> _subjects = [];
   Subject? _selectedSubject;
-  final List<Exam> _exams = [];
+  late Exam _exam;
+  bool get _isEditMode => widget.exam != null;
 
   @override
   void initState() {
     super.initState();
     _loadSubjects();
-    _addExamField();
+    if (_isEditMode) {
+      _exam = widget.exam!;
+    } else {
+      _exam = Exam(subjectId: 0, name: '', date: DateTime.now());
+    }
   }
 
   Future<void> _loadSubjects() async {
@@ -31,24 +38,16 @@ class _AddExamScreenState extends State<AddExamScreen> {
     setState(() {
       _subjects = _subjectService.subjects;
       if (_subjects.isNotEmpty) {
-        _selectedSubject = _subjects.first;
+        if (_isEditMode) {
+          _selectedSubject = _subjectService.getSubjectById(_exam.subjectId);
+        } else {
+          _selectedSubject = _subjects.first;
+        }
       }
     });
   }
 
-  void _addExamField() {
-    setState(() {
-      _exams.add(Exam(subjectId: 0, name: '', date: DateTime.now()));
-    });
-  }
-
-  void _removeExamField(int index) {
-    setState(() {
-      _exams.removeAt(index);
-    });
-  }
-
-  Future<void> _saveExams() async {
+  Future<void> _saveExam() async {
     if (_selectedSubject == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a subject.')),
@@ -56,30 +55,39 @@ class _AddExamScreenState extends State<AddExamScreen> {
       return;
     }
 
-    for (final exam in _exams) {
-      if (exam.name.isNotEmpty) {
-        final newExam = Exam(
-          subjectId: _selectedSubject!.id!,
-          name: exam.name,
-          date: exam.date,
-        );
-        await dbHelper.insertExam(newExam);
-      }
+    if (_exam.name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter an exam name.')),
+      );
+      return;
     }
 
-    Navigator.of(context).pop();
+    final examToSave = Exam(
+      id: _isEditMode ? _exam.id : null,
+      subjectId: _selectedSubject!.id!,
+      name: _exam.name,
+      date: _exam.date,
+    );
+
+    if (_isEditMode) {
+      await dbHelper.updateExam(examToSave);
+    } else {
+      await dbHelper.insertExam(examToSave);
+    }
+
+    Navigator.of(context).pop(examToSave);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Exams'),
+        title: Text(_isEditMode ? 'Edit Exam' : 'Add Exam'),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: _saveExams,
-            tooltip: 'Save Exams',
+            onPressed: _saveExam,
+            tooltip: 'Save Exam',
           ),
         ],
       ),
@@ -90,16 +98,9 @@ class _AddExamScreenState extends State<AddExamScreen> {
           children: [
             _buildSubjectDropdown(),
             const SizedBox(height: 24),
-            _buildExamsTitle(),
-            const SizedBox(height: 8),
-            _buildExamsList(),
+            _buildExamField(),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _addExamField,
-        label: const Text('Add Exam'),
-        icon: const Icon(Icons.add),
       ),
     );
   }
@@ -139,31 +140,7 @@ class _AddExamScreenState extends State<AddExamScreen> {
     );
   }
 
-  Widget _buildExamsTitle() {
-    return Text(
-      _selectedSubject != null
-          ? 'Exams for ${_selectedSubject!.name}'
-          : 'Please select a subject',
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: Colors.grey[700],
-      ),
-    );
-  }
-
-  Widget _buildExamsList() {
-    return Expanded(
-      child: ListView.builder(
-        itemCount: _exams.length,
-        itemBuilder: (context, index) {
-          return _buildExamField(index);
-        },
-      ),
-    );
-  }
-
-  Widget _buildExamField(int index) {
+  Widget _buildExamField() {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -173,18 +150,10 @@ class _AddExamScreenState extends State<AddExamScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Exam #${index + 1}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
             TextFormField(
-              initialValue: _exams[index].name,
+              initialValue: _exam.name,
               onChanged: (value) {
-                _exams[index] = _exams[index].copyWith(name: value);
+                _exam = _exam.copyWith(name: value);
               },
               decoration: const InputDecoration(
                 labelText: 'Exam Name (e.g., Mid-Term, Final)',
@@ -201,20 +170,11 @@ class _AddExamScreenState extends State<AddExamScreen> {
                   style: TextStyle(color: Colors.grey[700]),
                 ),
                 TextButton.icon(
-                  onPressed: () => _pickDate(index),
+                  onPressed: _pickDate,
                   icon: const Icon(Icons.calendar_today),
-                  label: Text(DateFormat.yMd().format(_exams[index].date)),
+                  label: Text(DateFormat.yMd().format(_exam.date)),
                 ),
               ],
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                icon: Icon(Icons.delete_outline, color: Colors.red[400]),
-                onPressed: () => _removeExamField(index),
-                tooltip: 'Remove this exam',
-              ),
             ),
           ],
         ),
@@ -222,16 +182,16 @@ class _AddExamScreenState extends State<AddExamScreen> {
     );
   }
 
-  Future<void> _pickDate(int index) async {
+  Future<void> _pickDate() async {
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _exams[index].date,
+      initialDate: _exam.date,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
     );
     if (pickedDate != null) {
       setState(() {
-        _exams[index] = _exams[index].copyWith(date: pickedDate);
+        _exam = _exam.copyWith(date: pickedDate);
       });
     }
   }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import '../services/subject_service.dart';
 import '../models/subject.dart';
-import './add_exam_screen.dart';
 import './subject_details_screen.dart';
 
 class SubjectsScreen extends StatefulWidget {
@@ -400,30 +398,10 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
           ],
         ),
       ),
-      floatingActionButton: SpeedDial(
-        icon: Icons.add,
-        activeIcon: Icons.close,
-        backgroundColor: Colors.blue[600],
-        foregroundColor: Colors.white,
-        children: [
-          SpeedDialChild(
-            child: const Icon(Icons.note_add),
-            label: 'Add Subject',
-            onTap: () => _showSubjectDialog(),
-          ),
-          SpeedDialChild(
-            child: const Icon(Icons.event),
-            label: 'Add Exam',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AddExamScreen(),
-                ),
-              );
-            },
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showSubjectDialog(),
+        child: const Icon(Icons.add),
+        tooltip: 'Add Subject',
       ),
     );
   }
