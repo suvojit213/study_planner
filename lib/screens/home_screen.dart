@@ -341,26 +341,36 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '$daysUntil',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red[600],
-                              ),
+                        if (daysUntil < 0)
+                          Text(
+                            'Completed',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[600],
                             ),
-                            Text(
-                              'days left',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
+                          )
+                        else
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '$daysUntil',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red[600],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
+                              Text(
+                                'days left',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   ),
