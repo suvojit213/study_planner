@@ -3,18 +3,15 @@ import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:lottie/lottie.dart';
 import 'package:study_planner/screens/home_screen.dart';
 import 'package:study_planner/services/timer_service.dart';
-import '../database/database_helper.dart';
-import '../models/study_session.dart';
-import '../models/subject.dart';
 
 class AlarmScreen extends StatefulWidget {
-  final Subject subject;
-  final Duration duration;
+  final String subjectName;
+  final Duration duration; // Keep duration for now, will make it optional if not always available
 
   const AlarmScreen({
     super.key,
-    required this.subject,
-    required this.duration,
+    required this.subjectName,
+    this.duration = const Duration(minutes: 0), // Provide a default value
   });
 
   @override
@@ -22,7 +19,6 @@ class AlarmScreen extends StatefulWidget {
 }
 
 class _AlarmScreenState extends State<AlarmScreen> {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   @override
   void initState() {
@@ -42,55 +38,12 @@ class _AlarmScreenState extends State<AlarmScreen> {
     FlutterRingtonePlayer().stop();
     TimerService().resetCompletionStatus();
 
-    final notes = await _showAddNoteDialog();
-
-    final session = StudySession(
-      subjectId: widget.subject.id!,
-      startTime: DateTime.now().subtract(widget.duration),
-      endTime: DateTime.now(),
-      durationMinutes: widget.duration.inMinutes,
-      isCompleted: true,
-      notes: notes,
-    );
-
-    await _databaseHelper.insertStudySession(session);
+    // Notes functionality can be re-added later if needed, 
+    // potentially by updating the last session via background service.
 
     if (mounted) {
       Navigator.of(context).popUntil((route) => route.isFirst);
     }
-  }
-
-  Future<String?> _showAddNoteDialog() {
-    final notesController = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Add Notes'),
-          content: TextField(
-            controller: notesController,
-            decoration: const InputDecoration(
-              hintText: 'Write something about this session...',
-            ),
-            maxLines: 3,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(null);
-              },
-              child: const Text('Skip'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(notesController.text);
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -127,7 +80,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Subject: ${widget.subject.name}',
+                    'Subject: ${widget.subjectName}',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,

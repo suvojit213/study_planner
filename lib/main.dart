@@ -10,11 +10,14 @@ import 'screens/home_screen.dart';
 import 'screens/timer_screen.dart';
 import 'screens/subjects_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/alarm_screen.dart'; // Import AlarmScreen
 
 import 'package:study_planner/services/background_service.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>(); // Define a global navigator key
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +27,20 @@ Future<void> main() async {
       AndroidInitializationSettings('@mipmap/ic_launcher');
   const InitializationSettings initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
+      if (notificationResponse.payload != null &&
+          notificationResponse.payload!.startsWith('alarm_completion_')) {
+        final subjectName = notificationResponse.payload!.substring('alarm_completion_'.length);
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (context) => AlarmScreen(subjectName: subjectName),
+          ),
+        );
+      }
+    },
+  );
 
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
     'study_timer_channel',
@@ -67,6 +83,7 @@ class StudyPlannerApp extends StatelessWidget {
     return Consumer<ThemeService>(
       builder: (context, themeService, child) {
         return MaterialApp(
+          navigatorKey: navigatorKey, // Add navigatorKey here
           title: 'Study Planner',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(

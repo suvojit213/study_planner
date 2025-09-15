@@ -164,6 +164,7 @@ void onStart(ServiceInstance service) async {
 
   service.on('stop').listen((event) async {
     _timer?.cancel();
+    FlutterRingtonePlayer().stop(); // Stop alarm when timer is stopped
     if (_currentSession != null) {
       final updatedSession = _currentSession!.copyWith(
         endTime: DateTime.now(),
@@ -177,6 +178,7 @@ void onStart(ServiceInstance service) async {
     _elapsedSeconds = 0;
     await _clearState();
     flutterLocalNotificationsPlugin.cancel(1);
+    flutterLocalNotificationsPlugin.cancel(0); // Cancel completion notification as well
   });
 }
 
@@ -193,7 +195,7 @@ Future<void> _showCompletionNotification(FlutterLocalNotificationsPlugin plugin,
       importance: Importance.max,
       priority: Priority.high,
       fullScreenIntent: true,
-      sound: alarmSound != null ? UriAndroidNotificationSound(alarmSound) : null,
+      // No sound here, will play with flutter_ringtone_player
     );
     final NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
@@ -202,5 +204,7 @@ Future<void> _showCompletionNotification(FlutterLocalNotificationsPlugin plugin,
       'Target Completed!',
       'Congratulations! You have completed your study target for \$subjectName.',
       platformChannelSpecifics,
+      payload: 'alarm_completion_\$subjectName', // Add a payload
     );
+    FlutterRingtonePlayer().playAlarm(looping: true, volume: 1.0); // Play alarm sound
 }
