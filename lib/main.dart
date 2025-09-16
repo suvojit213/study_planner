@@ -37,6 +37,11 @@ Future<void> main() async {
     if (fullScreenStatus.isDenied) {
       await Permission.systemAlertWindow.request();
     }
+
+    var scheduleExactAlarmStatus = await Permission.scheduleExactAlarm.status;
+    if (scheduleExactAlarmStatus.isDenied) {
+      await Permission.scheduleExactAlarm.request();
+    }
   }
 
   runApp(
