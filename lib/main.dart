@@ -23,7 +23,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>(); // D
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeService();
-  await AlarmService.initialize();
+  
 
   await initializeNotifications(flutterLocalNotificationsPlugin);
 
