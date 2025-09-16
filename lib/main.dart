@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:study_planner/services/alarm_service.dart';
 import 'services/theme_service.dart';
 import 'dart:io';
 
@@ -22,38 +23,9 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>(); // D
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeService();
+  await AlarmService.initialize();
 
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-  const InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
-  await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
-    onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
-      if (notificationResponse.payload != null &&
-          notificationResponse.payload!.startsWith('alarm_completion_')) {
-        final subjectName = notificationResponse.payload!.substring('alarm_completion_'.length);
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (context) => AlarmScreen(subjectName: subjectName),
-          ),
-        );
-      }
-    },
-  );
-
-  final AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'study_timer_channel',
-    'Study Timer',
-    description: 'Notification for the study timer',
-    importance: Importance.high,
-    enableVibration: true,
-  );
-
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
+  await initializeNotifications(flutterLocalNotificationsPlugin);
 
   if (Platform.isAndroid) {
     var status = await Permission.notification.status;
@@ -73,6 +45,42 @@ Future<void> main() async {
       child: const StudyPlannerApp(),
     ),
   );
+}
+
+Future<void> initializeNotifications(
+    FlutterLocalNotificationsPlugin plugin) async {
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+  await plugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
+      if (notificationResponse.payload != null &&
+          notificationResponse.payload!.startsWith('alarm_completion_')) {
+        final subjectName =
+            notificationResponse.payload!.substring('alarm_completion_'.length);
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (context) => AlarmScreen(subjectName: subjectName),
+          ),
+        );
+      }
+    },
+  );
+
+  final AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'study_timer_channel',
+    'Study Timer',
+    description: 'Notification for the study timer',
+    importance: Importance.high,
+    enableVibration: true,
+  );
+
+  await plugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
 }
 
 class StudyPlannerApp extends StatelessWidget {

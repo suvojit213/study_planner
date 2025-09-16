@@ -6,10 +6,10 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:study_planner/models/subject.dart';
+import 'package:study_planner/services/alarm_service.dart';
 import 'package:study_planner/services/settings_service.dart';
 import 'package:study_planner/database/database_helper.dart';
 import 'package:study_planner/models/study_session.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 
 Future<void> initializeService() async {
   final service = FlutterBackgroundService();
@@ -107,7 +107,7 @@ void onStart(ServiceInstance service) async {
       );
       await _dbHelper.updateStudySession(updatedSession);
       
-      _showCompletionNotification(flutterLocalNotificationsPlugin, _currentSubject!.name, _settingsService);
+      AlarmService.scheduleAlarm(DateTime.now().add(const Duration(seconds: 1)), _currentSubject!.name);
 
       service.invoke('completed', {'subject': _currentSubject!.toMap(), 'duration': _elapsedSeconds});
       
@@ -164,7 +164,6 @@ void onStart(ServiceInstance service) async {
 
   service.on('stop').listen((event) async {
     _timer?.cancel();
-    FlutterRingtonePlayer().stop(); // Stop alarm when timer is stopped
     if (_currentSession != null) {
       final updatedSession = _currentSession!.copyWith(
         endTime: DateTime.now(),
@@ -180,31 +179,4 @@ void onStart(ServiceInstance service) async {
     flutterLocalNotificationsPlugin.cancel(1);
     flutterLocalNotificationsPlugin.cancel(0); // Cancel completion notification as well
   });
-}
-
-Future<void> _showCompletionNotification(FlutterLocalNotificationsPlugin plugin, String subjectName, SettingsService settingsService) async {
-    final customAlarmSound = await settingsService.getAlarmSound();
-    final defaultAlarmSound = await settingsService.getDefaultAlarmSound();
-    final alarmSound = customAlarmSound ?? defaultAlarmSound;
-
-    final AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'study_target_completion_channel',
-      'Study Target Completion',
-      channelDescription: 'Notifies when a study target is completed',
-      importance: Importance.max,
-      priority: Priority.high,
-      fullScreenIntent: true,
-      // No sound here, will play with flutter_ringtone_player
-    );
-    final NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    await plugin.show(
-      0,
-      'Target Completed!',
-      'Congratulations! You have completed your study target for \$subjectName.',
-      platformChannelSpecifics,
-      payload: 'alarm_completion_\$subjectName', // Add a payload
-    );
-    FlutterRingtonePlayer().playAlarm(looping: true, volume: 1.0); // Play alarm sound
 }
