@@ -79,6 +79,7 @@ void onStart(ServiceInstance service) async {
           priority: Priority.high,
           ongoing: true,
           icon: '@mipmap/ic_launcher',
+          onlyAlertOnce: true,
         ),
       ),
     );

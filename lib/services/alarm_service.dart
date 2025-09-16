@@ -36,7 +36,11 @@ class AlarmService {
         FlutterLocalNotificationsPlugin();
 
     // Initialize notifications
-    await initializeNotifications(flutterLocalNotificationsPlugin);
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
     final settingsService = SettingsService();
     final customAlarmSound = await settingsService.getAlarmSound();
@@ -63,7 +67,5 @@ class AlarmService {
       platformChannelSpecifics,
       payload: 'alarm_completion_$subjectName',
     );
-
-    FlutterRingtonePlayer().playAlarm(looping: true, volume: 1.0);
   }
 }
