@@ -17,12 +17,12 @@ Future<void> initializeService() async {
     androidConfiguration: AndroidConfiguration(
       onStart: onStart,
       isForegroundMode: true,
-      autoStart: false,
+      autoStart: true, // Keep the service running
     ),
     iosConfiguration: IosConfiguration(
       onForeground: onStart,
       onBackground: onBackground,
-      autoStart: false,
+      autoStart: true, // Keep the service running
     ),
   );
 }
@@ -40,6 +40,25 @@ void onStart(ServiceInstance service) async {
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  // Show a permanent notification
+  flutterLocalNotificationsPlugin.show(
+    0,
+    'Study Planner is running',
+    'Keeping the app alive for reliable alarms.',
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'study_planner_channel',
+        'Study Planner',
+        channelDescription: 'Notification to keep the app running in the background.',
+        importance: Importance.low,
+        priority: Priority.low,
+        ongoing: true,
+        icon: '@mipmap/ic_launcher',
+      ),
+    ),
+  );
+
 
   Timer? _timer;
   int _elapsedSeconds = 0;
@@ -178,6 +197,5 @@ void onStart(ServiceInstance service) async {
     _elapsedSeconds = 0;
     await _clearState();
     flutterLocalNotificationsPlugin.cancel(1);
-    flutterLocalNotificationsPlugin.cancel(0); // Cancel completion notification as well
   });
 }
